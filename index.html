@@ -138,8 +138,8 @@
   .nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; z-index:40;
     background:rgba(255,255,255,.96); backdrop-filter:blur(12px); border-top:1px solid var(--line); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
   @media(min-width:480px){ .nav{bottom:24px; border-radius:0 0 38px 38px} }
-  .tab{flex:1; text-align:center; padding:5px 0; cursor:pointer; color:var(--faint)}
-  .tab .ti{font-size:19px; line-height:1} .tab .tl{font-size:10px; font-weight:700; margin-top:3px}
+  .tab{flex:1; text-align:center; padding:6px 0; cursor:pointer; color:var(--gray)}
+  .tab .ti{font-size:21px; line-height:1} .tab .tl{font-size:12.5px; font-weight:800; margin-top:4px; letter-spacing:-.01em}
   .tab.on{color:var(--acc)}
 
   /* share overlay (F6) */
@@ -196,6 +196,11 @@
   .viewtoggle{display:flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; align-self:center}
   .vt-btn{border:none; background:#fff; color:var(--faint); font-size:11px; font-weight:700; line-height:1; padding:7px 10px; cursor:pointer; font-family:inherit; white-space:nowrap}
   .vt-btn.on{background:var(--ink); color:#fff}
+  /* 페이저 */
+  .pager{display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin:16px 0 4px}
+  .pg{min-width:33px; height:33px; border:1px solid var(--line); border-radius:9px; background:#fff; color:#55534c; font-family:"Archivo"; font-weight:800; font-size:13px; cursor:pointer}
+  .pg.on{background:var(--acc); color:#fff; border-color:var(--acc)}
+  .pg:disabled{opacity:.35; cursor:default}
   /* 앨범(바둑판) 카드 */
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   .exg{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff}
@@ -284,6 +289,7 @@
         </div>
       </div>
       <div id="list"></div>
+      <div id="pager" class="pager"></div>
       <div class="foot">
         서울 8개 권역 실제 갤러리·미술관 전시를 한곳에서 — 매주 큐레이션·업데이트.<br>
         <span style="color:var(--faint)">프로토타입 · 실제 전시 기반 샘플 데이터(2026.06)</span>
@@ -905,7 +911,7 @@ function renderChips(){
   var c=document.getElementById('chips'); c.innerHTML='';
   DISTRICTS.forEach(function(d){
     var el=document.createElement('div'); el.className='chip'+(d===filter?' on':''); el.textContent=d;
-    el.onclick=function(){filter=d; renderChips(); renderList();}; c.appendChild(el);
+    el.onclick=function(){filter=d; page=1; renderChips(); renderList();}; c.appendChild(el);
   });
 }
 var openActs={};
@@ -960,17 +966,32 @@ function cardTable(e){
     +'<div class="c-h'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')">'+(s.h?'♥':'♡')+'</div>'
   +'</div>';
 }
+var page=1, PER=6;
 function renderList(){
   var picks=document.getElementById('picks');
   picks.innerHTML=EX.filter(function(e){return e.pick;}).map(card).join('');
   var l=document.getElementById('list');
   var arr=EX.filter(function(e){return filter==='전체'||e.dist===filter;});
   document.getElementById('alltitle').textContent= filter==='전체'?'지금 열린 전시':(filter+' 전시');
-  if(!arr.length){ l.className=''; l.innerHTML='<div class="empty"><div class="ic">🧭</div>'+filter+' 지역은 등록된 전시를 준비 중이에요.<br>곧 추가됩니다.</div>'; return; }
-  if(view==='grid'){ l.className='grid2'; l.innerHTML=arr.map(cardGrid).join(''); }
-  else if(view==='table'){ l.className=''; l.innerHTML='<div class="tbl"><div class="tr th"><div class="c-art">전시 · 갤러리</div><div class="c-date">기간</div><div class="c-price">가격</div><div class="c-h">♡</div></div>'+arr.map(cardTable).join('')+'</div>'; }
-  else { l.className=''; l.innerHTML=arr.map(card).join(''); }
+  if(!arr.length){ l.className=''; l.innerHTML='<div class="empty"><div class="ic">🧭</div>'+filter+' 지역은 등록된 전시를 준비 중이에요.<br>곧 추가됩니다.</div>'; renderPager(0); return; }
+  var pages=Math.ceil(arr.length/PER); if(page>pages)page=pages; if(page<1)page=1;
+  var slice=arr.slice((page-1)*PER, page*PER);
+  if(view==='grid'){ l.className='grid2'; l.innerHTML=slice.map(cardGrid).join(''); }
+  else if(view==='table'){ l.className=''; l.innerHTML='<div class="tbl"><div class="tr th"><div class="c-art">전시 · 갤러리</div><div class="c-date">기간</div><div class="c-price">가격</div><div class="c-h">♡</div></div>'+slice.map(cardTable).join('')+'</div>'; }
+  else { l.className=''; l.innerHTML=slice.map(card).join(''); }
+  renderPager(arr.length);
 }
+function renderPager(total){
+  var el=document.getElementById('pager'); if(!el) return;
+  var pages=Math.ceil(total/PER);
+  if(pages<=1){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='flex';
+  var h='<button class="pg" '+(page<=1?'disabled':'')+' onclick="goPage('+(page-1)+')">‹</button>';
+  for(var i=1;i<=pages;i++){ h+='<button class="pg'+(i===page?' on':'')+'" onclick="goPage('+i+')">'+i+'</button>'; }
+  h+='<button class="pg" '+(page>=pages?'disabled':'')+' onclick="goPage('+(page+1)+')">›</button>';
+  el.innerHTML=h;
+}
+function goPage(p){ page=p; renderList(); var y=document.getElementById('list').getBoundingClientRect().top+window.scrollY-66; window.scrollTo({top:(y<0?0:y),behavior:'smooth'}); }
 function setView(v){
   view=v; try{localStorage.setItem('covet_view',v);}catch(e){}
   var ids={list:'vtList',table:'vtTable',grid:'vtGrid'};
