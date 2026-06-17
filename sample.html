@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COVET — 검증 리포트 (샘플)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --ink:#0c0c0c; --gray:#8a8a88; --faint:#b8b8b4; --line:#ececea;
+    --acc:#6d33c9; --acc2:#9466e0; --soft:#f5f1fc; --paper:#fff;
+    --win:#2c7a4b; --winsoft:#eef7f1; --warn:#b5482a; --warnsoft:#fbf0ec; --amber:#9a6b15; --ambersoft:#fbf6ea;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+  body{background:#e9e7ef; color:var(--ink); font-family:"Pretendard",sans-serif; -webkit-font-smoothing:antialiased; line-height:1.55;
+    min-height:100vh; display:flex; justify-content:center; align-items:flex-start}
+  .arc{font-family:"Archivo",sans-serif}
+
+  /* phone frame (앱과 동일) */
+  .phone{width:100%; max-width:430px; background:var(--paper); min-height:100vh; position:relative; overflow:hidden;
+    box-shadow:0 30px 80px rgba(40,20,80,.22)}
+  @media(min-width:480px){ body{padding:24px 0} .phone{min-height:calc(100vh - 48px); border-radius:38px; border:1px solid #ddd} }
+
+  /* top bar (앱과 동일) */
+  .top{position:sticky; top:0; z-index:30; background:rgba(255,255,255,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); padding:15px 20px 12px}
+  .brand{display:flex; align-items:center; justify-content:space-between}
+  .brand .logo{font-family:"Archivo"; font-weight:900; font-size:22px; letter-spacing:-.03em}
+  .brand .logo .d{color:var(--acc)}
+  .brand .me{width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--acc),var(--acc2)); color:#fff; font-family:"Archivo"; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center}
+  .greet{margin-top:9px; font-size:13px; color:var(--gray)}
+  .greet b{color:var(--ink); font-weight:700}
+
+  .body{padding:14px 20px 30px}
+
+  /* sample notice pill */
+  .notice{display:flex; gap:9px; align-items:flex-start; background:var(--ambersoft); border:1px solid #ecdcb8; border-radius:12px; padding:11px 13px; font-size:11.5px; color:#6b4e12; line-height:1.5; margin-bottom:16px}
+  .notice b{color:#4a360b}
+
+  /* hero verdict (앱 .acc 그라데이션 언어) */
+  .hero{background:linear-gradient(135deg,#2a1740,#48207f); color:#fff; border-radius:18px; padding:18px 18px 19px; position:relative; overflow:hidden; margin-bottom:16px}
+  .hero .doctype{font-family:"Archivo"; font-weight:800; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:#cdb8f5}
+  .hero .vbadge{display:inline-flex; align-items:center; gap:6px; background:#fff; color:var(--acc); font-family:"Archivo"; font-weight:900; font-size:13px; padding:7px 13px; border-radius:30px; margin:11px 0 12px}
+  .hero .vt{font-size:13.5px; line-height:1.62; color:#ece7f8}
+  .hero .vt b{color:#fff; font-weight:700}
+  .hero .hmeta{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px}
+  .hero .hmeta span{font-size:10.5px; color:#cdb8f5; background:rgba(255,255,255,.1); padding:4px 9px; border-radius:20px; font-weight:600}
+
+  /* section + card (앱 언어) */
+  .shead{display:flex; align-items:center; gap:8px; margin:20px 0 9px}
+  .shead .no{font-family:"Archivo"; font-weight:900; font-size:11px; color:var(--acc2)}
+  .shead h2{font-family:"Archivo"; font-weight:800; font-size:15.5px; letter-spacing:-.01em}
+  .card{border:1px solid var(--line); border-radius:16px; padding:15px; background:#fff}
+  .card+.card{margin-top:10px}
+
+  /* work facts */
+  .work{display:flex; gap:12px; align-items:center}
+  .work .sq{width:54px; height:54px; border-radius:12px; flex:none; background:linear-gradient(135deg,#37474f,#0d1316)}
+  .work .wt b{font-size:15px; font-weight:800} .work .wt span{font-size:12px; color:var(--gray); display:block; margin-top:2px}
+  .facts{border-top:1px solid var(--line); margin-top:12px; padding-top:4px}
+  .facts .fr{display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--line); font-size:12.5px}
+  .facts .fr:last-child{border-bottom:none}
+  .facts .fr .k{color:var(--gray)} .facts .fr .v{font-weight:700; text-align:right}
+
+  /* price band */
+  .prow{display:flex; gap:10px; margin-bottom:6px}
+  .prow .pc{flex:1; border-radius:12px; padding:11px 13px}
+  .prow .pc.ask{background:var(--warnsoft); border:1px solid #f0d9d1}
+  .prow .pc.fair{background:var(--winsoft); border:1px solid #d4e9dc}
+  .prow .pc .k{font-family:"Archivo"; font-weight:800; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:var(--gray)}
+  .prow .pc .v{font-family:"Archivo"; font-weight:900; font-size:16px; margin-top:3px}
+  .prow .pc.ask .v{color:var(--warn)} .prow .pc.fair .v{color:var(--win)}
+  .scale{position:relative; height:52px; margin:16px 4px 4px}
+  .scale .track{position:absolute; left:0; right:0; top:22px; height:8px; border-radius:6px; background:#efeaf3}
+  .scale .fair{position:absolute; top:19px; height:14px; border-radius:5px; background:rgba(44,122,75,.2); border:1.5px solid var(--win)}
+  .scale .mk{position:absolute; top:0; transform:translateX(-50%); text-align:center}
+  .scale .mk .pin{width:2px; height:30px; background:var(--win); margin:0 auto}
+  .scale .mk.ask .pin{background:var(--warn); width:2.5px; height:38px}
+  .scale .mk .tx{font-size:10px; font-weight:800; font-family:"Archivo"; margin-top:3px; white-space:nowrap; color:var(--win)}
+  .scale .mk.ask .tx{color:var(--warn)}
+  .method{font-size:11.5px; color:#615e54; line-height:1.6; margin-top:14px; padding-left:11px; border-left:2px solid var(--acc2)}
+  .method b{color:var(--ink)}
+
+  /* sources list */
+  .srclist{list-style:none}
+  .srclist li{font-size:12px; color:#55534c; padding:8px 0; border-bottom:1px dashed var(--line); line-height:1.5}
+  .srclist li:last-child{border-bottom:none}
+  .srclist li b{color:var(--ink); font-weight:700}
+  .srctag{font-family:"Archivo"; font-weight:800; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:var(--acc); background:var(--soft); padding:3px 8px; border-radius:20px; margin-bottom:9px; display:inline-block}
+
+  /* checklist (앱 원형 아이콘 언어) */
+  .chk{list-style:none}
+  .chk li{display:flex; gap:11px; padding:11px 0; border-bottom:1px solid var(--line)}
+  .chk li:last-child{border-bottom:none}
+  .chk .ico{flex:none; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:#fff}
+  .chk .ico.ok{background:var(--win)} .chk .ico.cau{background:var(--amber)} .chk .ico.go{background:var(--acc)}
+  .chk .ct b{display:block; font-size:13.5px; font-weight:800; margin-bottom:2px}
+  .chk .ct span{font-size:12px; color:#615e54; line-height:1.5}
+
+  /* AI note (앱 soft 언어) */
+  .ai{background:var(--soft); border:1px solid #e3d8f5; border-radius:16px; padding:15px}
+  .ai .h{display:flex; align-items:center; gap:7px; font-family:"Archivo"; font-weight:800; font-size:12px; color:var(--acc); margin-bottom:7px}
+  .ai .h .tag{font-size:8.5px; background:var(--acc); color:#fff; padding:3px 7px; border-radius:20px; letter-spacing:.04em}
+  .ai p{font-size:12px; color:#4a4654; line-height:1.65}
+  .ai p b{color:var(--ink)}
+
+  /* signoff (앱 curator 언어) */
+  .signoff{display:flex; gap:12px; align-items:center; border:1px solid var(--acc); background:var(--soft); border-radius:16px; padding:15px}
+  .signoff .face{width:46px; height:46px; border-radius:50%; flex:none; background:linear-gradient(135deg,var(--acc),var(--acc2)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:"Archivo"; font-weight:900; font-size:17px}
+  .signoff .si h4{font-family:"Archivo"; font-weight:900; font-size:14px}
+  .signoff .si .r{font-size:11px; color:var(--acc); font-weight:700; margin:2px 0 5px}
+  .signoff .si p{font-size:11.5px; color:#55534c; line-height:1.55}
+  .signoff .si p b{color:var(--ink)}
+
+  /* cta (앱 버튼) */
+  .cta{display:block; width:100%; text-align:center; background:var(--acc); color:#fff; font-weight:800; font-size:14px; border:none; border-radius:14px; padding:15px; cursor:pointer; font-family:"Pretendard"}
+  .cta.ghost{background:#fff; color:var(--acc); border:1.5px solid var(--acc)}
+  .cta.sm{padding:12px; font-size:13px}
+
+  .disc{font-size:10.5px; color:var(--faint); line-height:1.65; margin-top:16px}
+  .disc b{color:var(--gray)}
+  .foot{text-align:center; font-size:11px; color:var(--gray); line-height:1.6; padding:18px 6px 4px}
+  .foot b{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- top bar (앱과 동일) -->
+  <div class="top">
+    <div class="brand"><div class="logo">COVET<span class="d">.</span></div><div class="me">🛡</div></div>
+    <div class="greet">사기 전 검증 · <b>안목 리포트</b> — 파는 쪽이 아닌, 당신 편의 시선</div>
+  </div>
+
+  <div class="body">
+
+    <div class="notice">⚠️<div><b>샘플 리포트</b> — 작가·비교 데이터는 <b>실제 공개 경매 낙찰 기록</b>입니다. 제시 작품·제시가는 방법론 시연용 예시 시나리오이며, 실제 검증 시 해당 작품의 실측 데이터로 채워집니다.</div></div>
+
+    <!-- HERO VERDICT -->
+    <div class="hero">
+      <div class="doctype">Pre-Purchase Verification · 평결</div>
+      <div class="vbadge">⚖️ 조건부 — 재협상</div>
+      <div class="vt"><b>제시가가 최근 동급 낙찰 밴드 상단을 약 20% 초과합니다.</b> 이배는 국내외 2차 시장에서 환금성·작품성이 검증된 블루칩이라 보유가치는 충분하나, <b>현 제시가(사적 리세일)로는 권하지 않습니다.</b> 밴드 내(₩1.55억~₩1.95억)로 협상하면 합리적입니다.</div>
+      <div class="hmeta"><span>CV-VR-2026-0042</span><span>2026.06.16</span><span>건별 검증 ₩49,000</span><span>소요 1영업일</span></div>
+    </div>
+
+    <!-- 01 검증 대상 -->
+    <div class="shead"><span class="no">01</span><h2>검증 대상</h2></div>
+    <div class="card">
+      <div class="work">
+        <div class="sq"></div>
+        <div class="wt"><b>이배 (Lee Bae)</b><span>한국 · 블루칩 · 먹/숯 추상</span></div>
+      </div>
+      <div class="facts">
+        <div class="fr"><span class="k">작품 (예시 출품작)</span><span class="v">〈Brushstroke / 붓질〉 계열</span></div>
+        <div class="fr"><span class="k">매체 / 크기</span><span class="v">숯·아크릴 미디엄, 캔버스 · 130×162cm</span></div>
+        <div class="fr"><span class="k">제시 채널</span><span class="v">2차 사적 제안 (리세일) · 딜러</span></div>
+        <div class="fr"><span class="k">전속 갤러리</span><span class="v">Perrotin · 우손(Wooson)</span></div>
+      </div>
+    </div>
+
+    <!-- 02 가격 적정성 -->
+    <div class="shead"><span class="no">02</span><h2>가격 적정성</h2></div>
+    <div class="card">
+      <div class="prow">
+        <div class="pc ask"><div class="k">제시가 (Ask)</div><div class="v">₩2.35억</div></div>
+        <div class="pc fair"><div class="k">COVET 적정 밴드</div><div class="v">1.55–1.95억</div></div>
+      </div>
+      <div class="scale">
+        <div class="track"></div>
+        <div class="fair" style="left:25%; right:46%"></div>
+        <div class="mk" style="left:25%"><div class="pin"></div><div class="tx">하단 1.55억</div></div>
+        <div class="mk" style="left:54%"><div class="pin"></div><div class="tx">상단 1.95억</div></div>
+        <div class="mk ask" style="left:82%"><div class="pin"></div><div class="tx">제시 2.35억 +20%</div></div>
+      </div>
+      <div class="method"><b>산출:</b> 동일 작가 최근 24개월 동급 사이즈(숯/캔버스 100호 내외) <b>경매 낙찰 6건 클러스터(약 ₩1.4–1.7억)</b> + 사이즈·시리즈·컨디션 보정 + 1차(전속 갤러리) 프리미엄 반영. 대형작(200호+)은 별도 밴드(₩3억대).</div>
+    </div>
+
+    <!-- 03 가격 근거 -->
+    <div class="shead"><span class="no">03</span><h2>가격 근거 — 실제 공개 경매</h2></div>
+    <div class="card">
+      <span class="srctag">이배 최근 공개 낙찰 · KALDI 가격 마스터 DB</span>
+      <ul class="srclist">
+        <li><b>2025.11</b> 국내 경매 · 숯/캔버스 중형 — <b>낙찰 ₩143,000,000</b> <span style="color:var(--gray)">(추정가 ₩130–200M)</span></li>
+        <li><b>2025.06</b> 국내 경매 — <b>낙찰 ₩142,000,000</b> <span style="color:var(--gray)">(추정가 ₩94–130M)</span></li>
+        <li><b>2024.11</b> 국내 경매 — <b>낙찰 ₩145,000,000</b> <span style="color:var(--gray)">(추정가 ₩130–180M)</span></li>
+        <li><b>2024.04</b> 국내 경매 — <b>낙찰(프리미엄 포함) ₩168,900,000</b> <span style="color:var(--gray)">(추정가 ₩120–250M)</span></li>
+        <li><b>참고(대형)</b> 2025.04 해외 경매 — €198,400 ≈ <b>₩320,000,000</b> <span style="color:var(--gray)">(추정가 ₩290–450M)</span></li>
+      </ul>
+    </div>
+
+    <!-- 04 점검 -->
+    <div class="shead"><span class="no">04</span><h2>진위 · 출처 · 상태 점검</h2></div>
+    <div class="card">
+      <ul class="chk">
+        <li><div class="ico cau">!</div><div class="ct"><b>출처 (Provenance)</b><span>사적 리세일 — 직전 소장 이력·매입 인보이스·보증서 요구. 경매 출품 이력(유찰 포함) 대조 필요.</span></div></li>
+        <li><div class="ico ok">✓</div><div class="ct"><b>진위 (Authenticity)</b><span>위작 리스크 상대적 낮음. 작가 스튜디오/갤러리 아카이브 등록·서명·뒷면 라벨 확인 권장.</span></div></li>
+        <li><div class="ico cau">!</div><div class="ct"><b>상태 (Condition)</b><span>숯·미디엄 표면은 마찰·박락에 민감 — 실물 컨디션 리포트 필수. 액자·UV·보관 이력 확인.</span></div></li>
+        <li><div class="ico ok">✓</div><div class="ct"><b>유동성 (Liquidity)</b><span>블루칩 — 국내외 2차 시장 출현 활발(최근 24개월 낙찰 다수). 환금성 양호.</span></div></li>
+      </ul>
+    </div>
+
+    <!-- 05 협상 포인트 -->
+    <div class="shead"><span class="no">05</span><h2>협상 포인트</h2></div>
+    <div class="card">
+      <ul class="chk">
+        <li><div class="ico go">→</div><div class="ct"><b>밴드 상단(₩1.95억) 이하로 제시</b><span>"최근 동급 낙찰 ₩1.4–1.7억" 근거 제시 → 2.35억 대비 약 17%+ 인하 여지.</span></div></li>
+        <li><div class="ico go">→</div><div class="ct"><b>사적 리세일 마크업 확인</b><span>직전 낙찰·매입가 대비 딜러 마크업 점검. 보증서·아카이브 등록·운송보험 포함 요구.</span></div></li>
+      </ul>
+    </div>
+
+    <!-- 06 검증 방식 -->
+    <div class="shead"><span class="no">06</span><h2>검증 방식</h2></div>
+    <div class="ai">
+      <div class="h"><span class="tag">AI 백오피스</span> 초안 생성 → 검수자 서명</div>
+      <p>비교군 수집·가격밴드 1차 산출·체크리스트 초안은 <b>COVET AI 백오피스</b>가 시장 데이터로 자동 생성하고, <b>실명 검수자가 직접 검수·판단·서명</b>합니다. 자동화는 속도(1영업일)와 일관성을, 최종 판단과 책임은 사람이 — <b>"AI가 정보를 모으고, 사람이 신뢰를 판다."</b></p>
+    </div>
+
+    <!-- SIGNOFF -->
+    <div class="shead"><span class="no">07</span><h2>검수</h2></div>
+    <div class="signoff">
+      <div class="face">K</div>
+      <div class="si">
+        <h4>COVET 검수자 패널 <span style="font-weight:600;color:var(--gray);font-size:11px">/ KALDI ART</span></h4>
+        <div class="r">검수·서명: [검수자 실명] · 데이터 방법론 + 실명 검수</div>
+        <p>한 사람의 직감이 아니라 <b>공개된 산출 방식(02·03)과 실명 검수자의 검수</b>로 작성되며, 갤러리·판매자가 아닌 <b>구매자(컬렉터)를 대리</b>합니다. COVET은 본 거래에서 작품 마진·판매 수수료를 받지 않습니다(fiduciary).</p>
+      </div>
+    </div>
+
+    <!-- 한눈 요약 (TL;DR) — 맨 위 평결 + 여기만 봐도 결론이 잡히게 -->
+    <div class="shead"><span class="no">✦</span><h2>한눈 요약 — 그래서 결론은?</h2></div>
+    <div style="border:1.5px solid var(--acc);border-radius:18px;background:var(--soft);padding:17px">
+      <span style="display:inline-block;font-family:'Archivo';font-weight:900;font-size:12px;color:#fff;background:var(--amber);padding:6px 12px;border-radius:30px;margin-bottom:13px">⚖️ 조건부 — 재협상</span>
+      <div style="display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #e3d8f5;border-bottom:1px solid #e3d8f5">
+        <div><div style="font-family:'Archivo';font-weight:800;font-size:9.5px;letter-spacing:.05em;color:var(--gray)">제시가</div><div style="font-family:'Archivo';font-weight:900;font-size:18px;color:var(--warn)">₩2.35억</div></div>
+        <div style="text-align:right"><div style="font-family:'Archivo';font-weight:800;font-size:9.5px;letter-spacing:.05em;color:var(--gray)">적정 밴드</div><div style="font-family:'Archivo';font-weight:900;font-size:18px;color:var(--win)">1.55–1.95억</div></div>
+      </div>
+      <p style="font-size:13px;color:#3a2a52;line-height:1.65;margin-top:12px"><b>이배는 환금성·작품성이 검증된 블루칩 — 살 가치는 충분합니다.</b> 다만 현 제시가가 최근 동급 낙찰 밴드보다 <b style="color:var(--warn)">약 20% 비쌉니다.</b></p>
+      <p style="font-size:13px;color:#3a2a52;line-height:1.65;margin-top:9px">👉 <b>₩1.95억 이하로 협상</b>하면 합리적이에요. 혼자 협상이 부담되면 <b style="color:var(--acc)">어드바이저 1:1 상담</b>으로 같이 진행하세요.</p>
+    </div>
+
+    <!-- CTA (앱 버튼 언어) — 1:1 상담 유입 강화 -->
+    <div style="margin-top:16px">
+      <button class="cta" onclick="consult()">🤝 어드바이저에게 1:1 상담하기 →</button>
+      <button class="cta ghost sm" style="margin-top:8px" onclick="back()">건별 검증 받기 · ₩49,000</button>
+      <button class="cta ghost sm" style="margin-top:8px" onclick="back()">← 앱으로 돌아가기</button>
+    </div>
+
+    <div class="disc"><b>책임 범위·면책:</b> 본 리포트는 공개 시장 데이터와 전문 판단에 기반한 <b>의견</b>이며, 투자수익·재판매가를 보장하지 않습니다. 진위에 대한 법적 감정(authentication)이 아니며, 고가·고위험 건은 전문 감정·진단서를 별도 권고합니다. 거래·계약·송금·보증서는 정식 서면으로 진행하세요. <b>COVET은 투자자문·세무자문이 아닙니다.</b></div>
+
+    <div class="foot">
+      <b>COVET.</b> · 신뢰받는 입문 컬렉터 어드바이저리<br>
+      이 한 장이 마음에 드셨다면 — 다음 작품도 사기 전, 당신 편에게 먼저 물어보세요.
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function back(){ if(window.opener){ window.close(); } else { history.length>1?history.back():alert('COVET 앱에서 건별 검증으로 이어집니다.'); } }
+  function consult(){ if(window.opener){ window.close(); } else { alert('COVET 어드바이저 1:1 상담 신청으로 이어집니다 — 작품·예산·상황을 남기면 검수자 패널이 회신드려요.'); } }
+</script>
+</body>
+</html>

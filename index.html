@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COVET — 전시 발견 (프로토타입 v2)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --ink:#0c0c0c; --gray:#8a8a88; --faint:#b8b8b4; --line:#ececea;
+    --acc:#6d33c9; --acc2:#9466e0; --soft:#f5f1fc; --paper:#fff;
+    --win:#2c7a4b; --winsoft:#eef7f1; --warn:#b5482a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+  body{background:#e9e7ef; color:var(--ink); font-family:"Pretendard",sans-serif; -webkit-font-smoothing:antialiased; line-height:1.55;
+    min-height:100vh; display:flex; justify-content:center; align-items:flex-start}
+  .arc{font-family:"Archivo",sans-serif}
+
+  /* phone frame */
+  .phone{width:100%; max-width:430px; background:var(--paper); min-height:100vh; position:relative; overflow:hidden;
+    box-shadow:0 30px 80px rgba(40,20,80,.22)}
+  @media(min-width:480px){ body{padding:24px 0} .phone{min-height:calc(100vh - 48px); border-radius:38px; border:1px solid #ddd} }
+
+  .screen{display:none; padding:0 0 96px}
+  .screen.on{display:block}
+
+  /* top bar */
+  .top{position:sticky; top:0; z-index:30; background:rgba(255,255,255,.94); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); padding:16px 20px 12px}
+  .brand{display:flex; align-items:center; justify-content:space-between}
+  .brand .logo{font-family:"Archivo"; font-weight:900; font-size:22px; letter-spacing:-.03em}
+  .brand .logo .d{color:var(--acc)}
+  .brand .me{width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--acc),var(--acc2)); color:#fff; font-family:"Archivo"; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center}
+  .greet{margin-top:9px; font-size:13px; color:var(--gray)}
+  .greet b{color:var(--ink); font-weight:700}
+
+  /* chips */
+  .chips{display:flex; gap:7px; overflow-x:auto; padding:11px 20px 4px; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none; font-weight:700; font-size:13px; padding:7px 14px; border-radius:30px; background:#f1f0ee; color:#55534c; border:1px solid transparent; cursor:pointer}
+  .chip.on{background:var(--ink); color:#fff}
+
+  .body{padding:14px 20px 0}
+  .shead{display:flex; align-items:baseline; justify-content:space-between; margin:18px 0 10px}
+  .shead h2{font-family:"Archivo"; font-weight:800; font-size:17px; letter-spacing:-.01em}
+  .shead h2 .kr{font-family:"Pretendard"}
+  .shead .more{font-size:12px; color:var(--acc); font-weight:700}
+
+  /* exhibition card */
+  .ex{border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:14px; background:#fff}
+  .ex .poster{height:148px; position:relative; display:flex; flex-direction:column; justify-content:flex-end; padding:14px 15px; color:#fff}
+  .ex .poster::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.42))}
+  .ex .poster .pin{position:relative; z-index:2}
+  .ex .poster .art{font-family:"Archivo"; font-weight:900; font-size:20px; line-height:1.05; letter-spacing:-.02em; text-shadow:0 1px 10px rgba(0,0,0,.25)}
+  .ex .poster .sub{position:relative; z-index:2; font-size:11.5px; opacity:.92; margin-top:3px}
+  .ex .poster .badge{position:absolute; top:12px; left:13px; z-index:2; font-family:"Archivo"; font-weight:800; font-size:9.5px; letter-spacing:.04em; background:rgba(255,255,255,.92); color:var(--ink); padding:3px 8px; border-radius:20px}
+  .ex .poster .pick{position:absolute; top:12px; right:13px; z-index:2; font-family:"Archivo"; font-weight:800; font-size:9.5px; letter-spacing:.04em; background:var(--acc); color:#fff; padding:3px 8px; border-radius:20px}
+  .ex .info{padding:12px 15px 6px}
+  .ex .meta{font-size:12px; color:var(--gray); display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+  .ex .meta .dot{color:var(--acc); font-weight:800}
+  .ex .meta .free{color:var(--win); font-weight:700} .ex .meta .paid{color:var(--warn); font-weight:700}
+  .ex .acts{display:flex; flex-wrap:wrap; gap:7px; border-top:1px solid var(--line); padding:9px 15px}
+  .act{flex:1 1 26%; text-align:center; font-size:12px; font-weight:700; color:#6b685f; padding:7px 0; border-radius:9px; background:#f7f6f4; cursor:pointer; transition:.12s}
+  .act .i{font-size:14px; display:block; margin-bottom:1px}
+  .act.on{background:var(--soft); color:var(--acc)}
+  .act.share.on{background:#eef7f1; color:var(--win)}
+
+  .empty{text-align:center; color:var(--gray); padding:46px 20px; font-size:13.5px}
+  .empty .ic{font-size:30px; margin-bottom:10px; opacity:.5}
+
+  /* accuracy / for-you */
+  .acc{background:linear-gradient(135deg,#2a1740,#48207f); color:#fff; border-radius:16px; padding:18px 18px; margin:6px 0 16px}
+  .acc .t{font-size:12px; color:#cdb8f5; font-weight:700}
+  .acc .bigp{font-family:"Archivo"; font-weight:900; font-size:30px; letter-spacing:-.02em; margin:4px 0}
+  .acc .track{height:7px; background:rgba(255,255,255,.18); border-radius:10px; overflow:hidden; margin:8px 0}
+  .acc .fill{height:100%; background:linear-gradient(90deg,var(--acc2),#d6c2ff); width:25%; transition:width .5s}
+  .acc .hint{font-size:11.5px; color:#b6a9d6; margin-top:6px}
+
+  .arche{border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; background:#fff}
+  .arche .lab{font-family:"Archivo"; font-weight:800; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--acc)}
+  .arche h3{font-family:"Archivo"; font-weight:900; font-size:21px; letter-spacing:-.02em; margin:5px 0 2px}
+  .arche .kr{font-size:13px; color:var(--acc); font-weight:700}
+  .arche p{font-size:12.5px; color:#55534c; margin-top:7px}
+
+  /* curator credit (F3) */
+  .curator{display:flex; gap:11px; align-items:center; border:1px dashed #d9c9f5; background:var(--soft); border-radius:12px; padding:12px 14px; margin-bottom:14px}
+  .curator .cav{width:40px; height:40px; border-radius:50%; flex:none; background:#e6dafb; color:var(--acc); display:flex; align-items:center; justify-content:center; font-family:"Archivo"; font-weight:900; font-size:13px}
+  .curator .ct{font-size:12.5px; color:#46443f; line-height:1.5}
+  .curator .ct b{color:var(--acc)}
+  .curator .ct .ph{background:#fff; border:1px solid #e0d2f7; border-radius:4px; padding:0 5px; font-weight:700; color:var(--acc); font-size:11px}
+
+  /* locked paid (F2) */
+  .lock{position:relative; border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; overflow:hidden}
+  .lock .blur{filter:blur(5px); opacity:.55; pointer-events:none; user-select:none}
+  .lock .rec{display:flex; gap:11px; align-items:center; margin:8px 0}
+  .lock .rsq{width:46px; height:46px; border-radius:8px; flex:none}
+  .lock .rt b{font-size:13.5px} .lock .rt span{font-size:11.5px; color:var(--gray)}
+  .lock .veil{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.92))}
+  .lock .veil .k{font-size:21px}
+  .lock .veil .msg{font-size:13px; font-weight:700; text-align:center; padding:0 24px; line-height:1.5}
+  .lock .veil .msg span{color:var(--acc)}
+
+  .cta{display:block; width:100%; text-align:center; background:var(--acc); color:#fff; font-weight:800; font-size:14px; border:none; border-radius:12px; padding:14px; cursor:pointer; font-family:"Pretendard"}
+  .cta.ghost{background:#fff; color:var(--acc); border:1.5px solid var(--acc)}
+  .cta.sm{padding:11px; font-size:13px}
+
+  /* archive */
+  .stat3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; margin:6px 0 14px}
+  .st{border:1px solid var(--line); border-radius:12px; padding:13px 8px; text-align:center}
+  .st .n{font-family:"Archivo"; font-weight:900; font-size:23px; color:var(--acc)}
+  .st .l{font-size:11px; color:var(--gray); margin-top:2px}
+  .arow{display:flex; gap:11px; align-items:center; padding:11px 0; border-bottom:1px solid var(--line)}
+  .arow .sq{width:42px; height:42px; border-radius:9px; flex:none}
+  .arow .at{flex:1} .arow .at b{font-size:13.5px} .arow .at span{font-size:11.5px; color:var(--gray); display:block}
+  .arow .tagm{font-size:10px; font-weight:800; font-family:"Archivo"; padding:3px 7px; border-radius:20px}
+  .tagm.v{background:var(--soft); color:var(--acc)} .tagm.l{background:var(--winsoft); color:var(--win)}
+
+  /* membership / verify */
+  .pricegrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 16px}
+  .pc{border:1px solid var(--line); border-radius:14px; padding:16px 14px}
+  .pc.hi{border:1.6px solid var(--acc); background:var(--soft)}
+  .pc .pn{font-family:"Archivo"; font-weight:800; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--gray)}
+  .pc .pp{font-family:"Archivo"; font-weight:900; font-size:21px; margin:6px 0 8px}
+  .pc ul{list-style:none} .pc li{font-size:12px; color:#55534c; padding:4px 0 4px 16px; position:relative}
+  .pc li::before{content:"✓"; position:absolute; left:0; color:var(--acc); font-weight:900}
+  .pc li.x{color:var(--faint)} .pc li.x::before{content:"–"; color:var(--faint)}
+
+  .verifybox{border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:14px}
+  .verifybox .vin{display:flex; gap:8px; margin:8px 0}
+  .verifybox input{flex:1; border:1px solid var(--line); border-radius:9px; padding:10px 12px; font-size:13px; font-family:"Pretendard"}
+  .verifybox .vbtn{background:var(--ink); color:#fff; border:none; border-radius:9px; padding:0 16px; font-weight:700; font-size:13px; cursor:pointer}
+  .vrep{font-size:12.5px}
+  .vrep .vl{display:flex; gap:8px; padding:7px 0; border-bottom:1px solid var(--line)}
+  .vrep .vl .vk{font-weight:800; min-width:74px; color:var(--acc)}
+  .vrep .vl.blur{filter:blur(4px)}
+
+  /* bottom nav */
+  .nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; z-index:40;
+    background:rgba(255,255,255,.96); backdrop-filter:blur(12px); border-top:1px solid var(--line); display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
+  @media(min-width:480px){ .nav{bottom:24px; border-radius:0 0 38px 38px} }
+  .tab{flex:1; text-align:center; padding:5px 0; cursor:pointer; color:var(--faint)}
+  .tab .ti{font-size:19px; line-height:1} .tab .tl{font-size:10px; font-weight:700; margin-top:3px}
+  .tab.on{color:var(--acc)}
+
+  /* share overlay (F6) */
+  .ov{position:fixed; inset:0; z-index:60; background:rgba(20,12,35,.55); backdrop-filter:blur(3px); display:none; align-items:flex-end; justify-content:center}
+  .ov.on{display:flex}
+  @media(min-width:480px){ .ov{align-items:center} }
+  .sheet{width:100%; max-width:430px; background:#fff; border-radius:22px 22px 0 0; padding:20px 20px 26px; animation:up .25s}
+  @media(min-width:480px){ .sheet{border-radius:22px; margin:0 16px} }
+  @keyframes up{from{transform:translateY(40px); opacity:.4}to{transform:none; opacity:1}}
+  .sheet .grab{width:40px; height:4px; background:#e0ddE8; border-radius:10px; margin:0 auto 14px}
+  .sharecard{border-radius:16px; padding:22px 18px; color:#fff; background:linear-gradient(135deg,#3a1f6b,#6d33c9); margin-bottom:14px; text-align:center}
+  .sharecard .sl{font-family:"Archivo"; font-weight:800; font-size:10px; letter-spacing:.14em; color:#d6c2ff}
+  .sharecard .sa{font-family:"Archivo"; font-weight:900; font-size:24px; margin:8px 0 2px; letter-spacing:-.02em}
+  .sharecard .sk{font-size:13px; color:#e9e2fb}
+  .sharecard .ss{font-size:11px; color:#cdb8f5; margin-top:10px}
+  .nextstep{font-size:12px; font-weight:700; color:var(--acc); text-align:center; margin:14px 0 8px}
+  .closex{text-align:center; color:var(--gray); font-size:12.5px; margin-top:12px; cursor:pointer}
+
+  .foot{padding:18px 20px 4px; font-size:10.5px; color:var(--faint); line-height:1.6}
+  .foot b{color:var(--gray)}
+
+  /* ===== v2.1 리텐션: 인사이트 피드 · 알림 · 워치리스트 · 안목 일지 ===== */
+  .bell{position:relative; margin-right:11px; font-size:18px; cursor:pointer}
+  .bell .bc{position:absolute; top:-5px; right:-7px; background:var(--warn); color:#fff; font-family:"Archivo"; font-weight:800; font-size:9px; min-width:15px; height:15px; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0 3px}
+  .insight{background:linear-gradient(135deg,#241043,#4a2080); color:#fff; border-radius:16px; padding:15px 17px 16px; margin:4px 0 14px; position:relative; overflow:hidden}
+  .insight .il{font-family:"Archivo"; font-weight:800; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:#cdb8f5}
+  .insight .iq{font-size:14.5px; line-height:1.55; margin:9px 0 4px; font-weight:700}
+  .insight .iby{font-size:12px; color:#c3b6e3; line-height:1.5}
+  .insight .inext{position:absolute; top:13px; right:14px; font-size:10.5px; color:#e9e2fb; font-weight:700; cursor:pointer; background:rgba(255,255,255,.12); padding:4px 9px; border-radius:20px}
+  .nudges{margin:0 0 16px}
+  .nudge{display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-left:3px solid var(--acc); border-radius:11px; padding:10px 12px; margin-bottom:7px; background:#fff; cursor:pointer}
+  .nudge .ni{font-size:15px; flex:none}
+  .nudge .nt{flex:1; font-size:12.3px; color:#3a382f; line-height:1.42}
+  .nudge .nt b{color:var(--ink); font-weight:700}
+  .nudge .nd{font-family:"Archivo"; font-weight:800; font-size:9.5px; color:#fff; padding:3px 8px; border-radius:20px; white-space:nowrap}
+  .nudge .nd.soon{background:var(--warn)} .nudge .nd.new{background:var(--win)} .nudge .nd.pulse{background:var(--acc)}
+  .dbadge{font-family:"Archivo"; font-weight:800; font-size:10px; padding:3px 8px; border-radius:20px; white-space:nowrap; flex:none}
+  .dbadge.soon{background:#fbeae5; color:var(--warn)} .dbadge.ok{background:var(--winsoft); color:var(--win)}
+  .jhead{font-family:"Archivo"; font-weight:800; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--gray); margin:18px 0 9px}
+  .spec .row{margin:12px 0}
+  .spec .lbl{display:flex; justify-content:space-between; font-size:11.5px; color:var(--gray); font-weight:700; margin-bottom:6px}
+  .spec .bar{height:9px; border-radius:6px; background:#efeaf8; position:relative}
+  .spec .pin{position:absolute; top:-3px; width:15px; height:15px; border-radius:50%; background:var(--acc); transform:translateX(-50%); box-shadow:0 1px 5px rgba(109,51,201,.5); transition:left .5s}
+  .wrapped{border-radius:16px; padding:17px 18px; color:#fff; background:linear-gradient(135deg,#6d33c9,#3a1f6b); margin:14px 0; overflow:hidden}
+  .wrapped .wl{font-family:"Archivo"; font-weight:800; font-size:9.5px; letter-spacing:.12em; color:#d6c2ff}
+  .wrapped .wt{font-family:"Archivo"; font-weight:900; font-size:18px; margin:4px 0 13px; letter-spacing:-.01em}
+  .wrapped .wg{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+  .wrapped .wc{background:rgba(255,255,255,.1); border-radius:11px; padding:11px 12px}
+  .wrapped .wc .wn{font-family:"Archivo"; font-weight:900; font-size:19px; line-height:1.15}
+  .wrapped .wc .wn.sm{font-size:14px}
+  .wrapped .wc .wk{font-size:10.5px; color:#cdb8f5; margin-top:2px}
+
+  /* 뷰 토글 (리스트 / 앨범) */
+  .viewtoggle{display:flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; align-self:center}
+  .vt-btn{border:none; background:#fff; color:var(--faint); font-size:11px; font-weight:700; line-height:1; padding:7px 10px; cursor:pointer; font-family:inherit; white-space:nowrap}
+  .vt-btn.on{background:var(--ink); color:#fff}
+  /* 앨범(바둑판) 카드 */
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .exg{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff}
+  .exg .gp{height:118px; position:relative; display:flex; flex-direction:column; justify-content:flex-end; padding:10px; color:#fff}
+  .exg .gp::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.46))}
+  .exg .gp .gbadge{position:absolute; top:8px; left:8px; z-index:2; font-family:"Archivo"; font-weight:800; font-size:8.5px; letter-spacing:.03em; background:rgba(255,255,255,.92); color:var(--ink); padding:2px 7px; border-radius:20px}
+  .exg .gp .gpick{position:absolute; bottom:8px; right:8px; z-index:2; font-family:"Archivo"; font-weight:800; font-size:8.5px; background:var(--acc); color:#fff; padding:2px 6px; border-radius:20px}
+  .exg .gp .gheart{position:absolute; top:6px; right:6px; z-index:3; width:27px; height:27px; border-radius:50%; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer}
+  .exg .gp .gheart.on{color:var(--warn)}
+  .exg .gp .gart{position:relative; z-index:2; font-family:"Archivo"; font-weight:900; font-size:14px; line-height:1.12; letter-spacing:-.02em; text-shadow:0 1px 8px rgba(0,0,0,.3)}
+  .exg .gi{padding:9px 11px 7px}
+  .exg .gi .gv{font-size:10.5px; color:var(--gray); line-height:1.35}
+  .exg .gi .gpr{font-size:10.5px; font-weight:800; margin-top:3px}
+  .exg .gacts{display:flex; border-top:1px solid var(--line)}
+  .exg .gacts .ga{flex:1; text-align:center; font-size:14px; padding:7px 0; color:#9b988f; cursor:pointer}
+  .exg .gacts .ga.on{color:var(--acc)}
+  .exg .gacts .ga.lon{color:var(--win)}
+  /* 안 볼래요(dim) + 부정 액션 */
+  .ex.dim, .exg.dim{opacity:.48}
+  .act.xon{color:var(--warn)}
+  .exg .gacts .ga.xon{color:var(--warn)}
+  /* 테이블 뷰 */
+  .tbl{border:1px solid var(--line); border-radius:13px; overflow:hidden}
+  .tbl .tr{display:flex; align-items:center; gap:9px; padding:10px 12px; border-bottom:1px solid var(--line)}
+  .tbl .tr:last-child{border-bottom:none}
+  .tbl .tr.dim{opacity:.48}
+  .tbl .th{background:#faf9f7}
+  .tbl .th>div{font-family:"Archivo"; font-weight:800; font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:var(--gray)}
+  .tbl .c-art{flex:1.5; min-width:0}
+  .tbl .c-art b{display:block; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tbl .c-art span{display:block; font-size:10px; color:var(--gray); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tbl .c-date{flex:none; width:76px; font-size:10px; color:var(--gray); text-align:center; line-height:1.3}
+  .tbl .c-price{flex:none; width:36px; text-align:center; font-size:11px; font-weight:800}
+  .tbl .c-h{flex:none; width:22px; text-align:center; font-size:15px; cursor:pointer; color:var(--faint)}
+  .tbl .c-h.on{color:var(--warn)}
+  /* 취향 테스트 */
+  .qprog{font-family:"Archivo";font-weight:800;font-size:10px;letter-spacing:.1em;color:var(--acc);text-transform:uppercase;margin-bottom:7px}
+  .qq{font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:15px}
+  .qopts{display:flex;flex-direction:column;gap:10px}
+  .qopt{display:flex;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
+  .qopt:hover{border-color:var(--acc);background:var(--soft)}
+  .qopt .qsq{width:46px;height:46px;border-radius:10px;flex:none}
+  .qopt .ql b{font-size:14.5px} .qopt .ql span{font-size:11.5px;color:var(--gray);display:block;margin-top:1px}
+  /* 2지선다: 양쪽 큰 작품 박스 */
+  .qopts.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .qbox{border:1.5px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;background:#fff;transition:.12s}
+  .qbox:hover,.qbox:active{border-color:var(--acc);box-shadow:0 6px 18px rgba(109,51,201,.16)}
+  .qbox .qimg{height:172px;position:relative}
+  .qbox .qimg::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), inset 0 -42px 52px rgba(0,0,0,.2)}
+  .qbox .qcap{padding:11px 12px 13px;text-align:center}
+  .qbox .qcap b{font-size:14px;display:block} .qbox .qcap span{font-size:11px;color:var(--gray);display:block;margin-top:2px}
+  .qrescard{border-radius:18px;padding:24px 18px;color:#fff;background:linear-gradient(135deg,#3a1f6b,#6d33c9);text-align:center;margin-bottom:14px}
+  .qrescard .rl{font-family:"Archivo";font-weight:800;font-size:10px;letter-spacing:.14em;color:#d6c2ff}
+  .qrescard .ren{font-family:"Archivo";font-weight:900;font-size:25px;margin:9px 0 3px;letter-spacing:-.02em}
+  .qrescard .rkr{font-size:14px;color:#e9e2fb}
+  .qrescard .rds{font-size:12.5px;color:#e9e2fb;margin-top:11px;line-height:1.55}
+  #ovq .sheet{max-height:90vh; overflow-y:auto}
+  /* 친구의 안목 */
+  .frow{display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+  .frow:last-child{border-bottom:none}
+  .frow .fav{width:40px;height:40px;border-radius:50%;flex:none;color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Archivo";font-weight:900;font-size:14px}
+  .frow .ft{flex:1} .frow .ft b{font-size:13.5px} .frow .ft .fr2{font-size:11px;color:var(--gray);display:block}
+  .frow .ftype{font-size:10.5px;font-weight:800;color:var(--acc);background:var(--soft);padding:4px 9px;border-radius:20px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ============ 1. 발견 (DEFAULT) ============ -->
+  <div class="screen on" id="sc-discover">
+    <div class="top">
+      <div class="brand"><div class="logo">COVET<span class="d">.</span></div>
+        <div style="display:flex;align-items:center"><div class="bell" onclick="go('archive')">🔔<span class="bc" id="bellCount">0</span></div><div class="me">나</div></div></div>
+      <div class="greet">오늘, 서울 어디 가서 볼까요 — <b>그림 좋아하는 당신</b>을 위한 전시 큐레이션</div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="body">
+      <div class="insight" id="insightCard"></div>
+      <div class="nudges" id="nudges"></div>
+      <div class="shead"><h2 class="kr">이번 주 추천 <span style="color:var(--acc)">✦</span></h2><div class="more" onclick="go('foryou')">내 취향으로 →</div></div>
+      <div id="picks"></div>
+      <div class="shead"><h2 class="kr" id="alltitle">지금 열린 전시</h2>
+        <div class="viewtoggle">
+          <button class="vt-btn on" id="vtList" onclick="setView('list')" title="리스트">☰ 리스트</button>
+          <button class="vt-btn" id="vtTable" onclick="setView('table')" title="테이블">▤ 테이블</button>
+        </div>
+      </div>
+      <div id="list"></div>
+      <div class="foot">
+        서울 8개 권역 실제 갤러리·미술관 전시를 한곳에서 — 매주 큐레이션·업데이트.<br>
+        <span style="color:var(--faint)">프로토타입 · 실제 전시 기반 샘플 데이터(2026.06)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. 추천 (FOR YOU) ============ -->
+  <div class="screen" id="sc-foryou">
+    <div class="top"><div class="brand"><div class="logo">취향 분석</div><div class="me">나</div></div>
+      <div class="greet">당신이 <b>다녀온 전시</b>가 쌓일수록 추천이 정확해집니다</div></div>
+    <div class="body">
+      <div class="acc">
+        <div class="t">추천 정확도</div>
+        <div class="bigp"><span id="accnum">25</span>%</div>
+        <div class="track"><div class="fill" id="accfill"></div></div>
+        <div class="hint" id="acchint">전시에 ♡·다녀옴·★를 남길수록 올라가요. (현재 행동 <span id="accn">0</span>건)</div>
+      </div>
+
+      <div class="arche">
+        <div class="lab">당신의 컬렉터 유형 (취향 테스트 + 행동 기반)</div>
+        <h3 id="archEN">아직 분석 전</h3><div class="kr" id="archKR">발견 탭에서 ♡·다녀옴·★를 남기면 유형이 잡혀요</div>
+        <p id="archDesc">전시 2개 이상에 반응하면 7가지 컬렉터 유형 중 당신의 좌표가 또렷해집니다.</p>
+      </div>
+      <button class="cta sm ghost" id="quizBtn" style="margin-bottom:16px" onclick="startQuiz()">✦ 30초 취향 테스트 — 빠르게 내 유형 찾기</button>
+
+      <!-- 무료 콘텐츠: 이 유형이 끌리는 전시 (구매 권유 없음) -->
+      <div class="shead"><h2 class="kr">이 유형이 끌리는 전시</h2></div>
+      <p style="font-size:11.5px;color:var(--gray);margin:-4px 0 8px">비슷한 취향의 컬렉터들이 좋아한 전시예요 — 부담 없이 둘러보세요.</p>
+      <div id="typeExhibs"></div>
+
+      <!-- 신뢰: 검수자 패널 + 데이터 방법론 (단일 히어로 페르소나 교체) -->
+      <div class="curator" style="margin-top:14px">
+        <div class="cav">✓</div>
+        <div class="ct">이 추천의 근거 — <b>데이터 방법론 + 실명 검수자 패널</b><br>한 사람의 직감이 아니라, 행동 데이터와 <b style="color:var(--acc)">실명 검수자(KALDI ART 외 N인)</b>의 검수로. <b style="color:var(--acc)">갤러리가 아닌, 컬렉터 편.</b></div>
+      </div>
+
+      <!-- 구매는 토글 뒤로 분리 (안 살 사람·아직 못 정한 사람 이탈 방지) -->
+      <div style="border:1px solid var(--line);border-radius:14px;padding:14px">
+        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+          <span style="font-size:13.5px;font-weight:700">작품도 추천받을래요 🎨</span>
+          <input type="checkbox" id="buyToggle" onchange="renderWorks()" style="width:20px;height:20px;accent-color:var(--acc)">
+        </label>
+        <div id="buyPanel" style="display:none;margin-top:13px">
+          <div style="font-size:12px;color:#55534c;margin-bottom:7px">예산을 먼저 알려주세요 — <b>그 안의 작품만</b> 보여드릴게요.</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="budget" min="0" max="4" value="2" oninput="renderWorks()" style="flex:1;accent-color:var(--acc)">
+            <b id="budgetLabel" style="font-size:13px;color:var(--acc);min-width:84px;text-align:right">~₩500만</b>
+          </div>
+          <div id="works" style="margin-top:13px"></div>
+          <p style="font-size:11.5px;color:var(--gray);text-align:center;margin-top:8px">마음에 들면 사기 전에 <b style="color:var(--acc)">검수자 패널과 같이 확인</b>하고 안심하고 시작하세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. 발자취 (ARCHIVE) ============ -->
+  <div class="screen" id="sc-archive">
+    <div class="top"><div class="brand"><div class="logo">나의 안목 일지</div><div class="me">나</div></div>
+      <div class="greet">쌓일수록 또렷해지는 — <b>나의 취향과 발자취</b></div></div>
+    <div class="body">
+      <div class="stat3">
+        <div class="st"><div class="n" id="cH">0</div><div class="l">♡ 관심</div></div>
+        <div class="st"><div class="n" id="cV">0</div><div class="l">✓ 다녀옴</div></div>
+        <div class="st"><div class="n" id="cL">0</div><div class="l">★ 좋았어요</div></div>
+      </div>
+      <div id="dislikeNote"></div>
+
+      <div id="tasteSpec"></div>
+      <div id="wrapped"></div>
+      <div id="watchlist"></div>
+
+      <div class="jhead" id="jhead" style="display:none">다녀온 여정</div>
+      <div id="archlist"></div>
+      <div id="archempty" class="empty"><div class="ic">🗺️</div>아직 비어 있어요.<br>발견 탭에서 ♡·다녀옴을 남기면<br>취향 그래프와 결산이 그려져요.</div>
+
+      <button class="cta" style="margin-top:18px" onclick="openShare()">내 안목 카드 공유하기</button>
+      <p style="font-size:11.5px;color:var(--gray);text-align:center;margin-top:8px">내 컬렉터 유형과 발자취를 친구와 공유해보세요.</p>
+
+      <div class="jhead" style="margin-top:26px">👯 친구의 안목</div>
+      <div id="friends"></div>
+      <button class="cta sm ghost" style="margin-top:12px" onclick="inviteFriend()">＋ 친구 초대하고 취향 비교하기</button>
+      <p style="font-size:10.5px;color:var(--faint);text-align:center;margin-top:7px">연인·가족·친구를 초대하면 서로의 컬렉터 유형과 ♡한 전시를 볼 수 있어요. <span style="color:var(--faint)">(데모 데이터)</span></p>
+    </div>
+  </div>
+
+  <!-- ============ 4. 멤버십 / 검증 ============ -->
+  <div class="screen" id="sc-member">
+    <div class="top"><div class="brand"><div class="logo">멤버십 · 검증</div><div class="me">나</div></div>
+      <div class="greet">제대로 시작하려는 컬렉터를 위한 — <b>안심하고 첫 걸음 떼는 법</b></div></div>
+    <div class="body">
+
+      <div class="shead"><h2 class="kr">멤버십이 해주는 일</h2></div>
+      <div style="border:1px solid var(--line);border-radius:16px;padding:4px 16px;margin-bottom:18px">
+        <div style="display:flex;gap:13px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)">
+          <span style="font-size:19px">✦</span><div style="flex:1"><b style="font-size:13.5px">내 취향에 맞는 작품 추천</b><br><span style="font-size:11.5px;color:var(--gray)">발자취·유형 기반으로 골라드려요</span></div>
+        </div>
+        <div style="display:flex;gap:13px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)">
+          <span style="font-size:19px">🛡</span><div style="flex:1"><b style="font-size:13.5px">사기 전 검증 — 월 1회 포함</b><br><span style="font-size:11.5px;color:var(--gray)">가격 적정·진위·리스크를 사기 전에 확인</span></div>
+        </div>
+        <div style="display:flex;gap:13px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)">
+          <span style="font-size:19px">📈</span><div style="flex:1"><b style="font-size:13.5px">진입가·작가 궤적 인텔</b><br><span style="font-size:11.5px;color:var(--gray)">지금 어느 작가가 뜨는지, 적정가는 얼마인지</span></div>
+        </div>
+        <div style="display:flex;gap:13px;align-items:center;padding:13px 0">
+          <span style="font-size:19px">📚</span><div style="flex:1"><b style="font-size:13.5px">안목 코스 연재</b><br><span style="font-size:11.5px;color:var(--gray)">한 걸음씩 보는 눈을 길러요 — 아래에서 1화 미리보기</span></div>
+        </div>
+      </div>
+
+      <div class="shead"><h2 class="kr">안목 코스 <span style="font-size:11px;color:var(--gray);font-weight:600">· 매주 1화 연재</span></h2></div>
+      <div style="border:1px solid var(--line);border-radius:16px;padding:2px 16px" id="courseList"></div>
+      <p style="font-size:11px;color:var(--gray);text-align:center;margin:9px 0 18px">📚 매주 1화씩 발행 · 새 화가 나오면 <b style="color:var(--acc)">🔔 알림</b>으로 알려드려요 · 1화는 무료</p>
+
+      <div class="shead"><h2 class="kr">옵션</h2></div>
+      <div class="pricegrid">
+        <div class="pc">
+          <div class="pn">Free</div><div class="pp">₩0</div>
+          <ul>
+            <li>전시 발견·지역 추천</li>
+            <li>♡·다녀옴·★ 기록·취향 유형</li>
+            <li>샘플 검증 리포트 보기</li>
+            <li class="x">작품 추천</li>
+            <li class="x">사기 전 검증</li>
+          </ul>
+        </div>
+        <div class="pc hi">
+          <div class="pn" style="color:var(--acc)">Membership</div><div class="pp">₩4,900<span style="font-size:11px">/월</span></div>
+          <ul>
+            <li>무료의 모든 것 +</li>
+            <li><b>내 취향 작품 추천</b></li>
+            <li><b>사기 전 검증 월 1회</b></li>
+            <li>진입가·궤적 인텔</li>
+            <li>안목 코스 연재</li>
+          </ul>
+        </div>
+      </div>
+      <button class="cta" style="margin-top:4px" onclick="pay('member')">멤버십 시작하기 · ₩4,900/월 →</button>
+      <p style="font-size:11px;color:var(--faint);text-align:center;margin-top:8px">언제든 해지 가능 · 작품 마진 없이 당신 편에서만</p>
+
+      <button class="cta sm ghost" id="memberMoreBtn" style="margin-top:14px" onclick="toggleMore()">＋ 단건 검증 · 1:1 자문 더 보기</button>
+      <div id="memberMore" style="display:none;margin-top:14px">
+      <div class="shead" style="margin-top:0"><h2 class="kr">구독 없이, 단건으로도</h2></div>
+      <div style="border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)">
+          <b class="arc" style="font-weight:900;color:var(--win);min-width:54px">무료</b>
+          <div style="flex:1;font-size:12.5px;color:#55534c">샘플 검증 리포트 보기</div>
+          <button class="cta sm ghost" style="width:auto;padding:8px 13px" onclick="openSample()">보기</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)">
+          <b class="arc" style="font-weight:900;color:var(--acc);min-width:54px">₩990</b>
+          <div style="flex:1;font-size:12.5px;color:#55534c">첫 안목 리포트 (단건)</div>
+          <button class="cta sm" style="width:auto;padding:8px 13px" onclick="pay('r990')">받기</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 0">
+          <b class="arc" style="font-weight:900;color:var(--acc);min-width:54px">₩49,000</b>
+          <div style="flex:1;font-size:12.5px;color:#55534c">사기 전 검증 (풀 리포트)</div>
+          <button class="cta sm" style="width:auto;padding:8px 13px" onclick="pay('verify')">의뢰</button>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--acc);border-radius:14px;padding:15px;background:var(--soft)">
+        <div style="font-family:'Archivo';font-weight:800;font-size:10px;letter-spacing:.08em;color:var(--acc)">PRIVATE</div>
+        <div style="font-size:15px;font-weight:800;margin:5px 0 4px">1:1 프라이빗 자문</div>
+        <div style="font-size:12.5px;color:#55534c;line-height:1.6">첫 컬렉션을 진지하게 시작한다면 — 작품 선정부터 검증·소싱·협상까지 처음부터 함께합니다.</div>
+        <button class="cta sm ghost" style="margin-top:11px" onclick="pay('sourcing')">1:1 자문 문의하기 →</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- bottom nav -->
+  <div class="nav">
+    <div class="tab on" data-t="discover" onclick="go('discover')"><div class="ti">🧭</div><div class="tl">발견</div></div>
+    <div class="tab" data-t="foryou" onclick="go('foryou')"><div class="ti">✦</div><div class="tl">취향</div></div>
+    <div class="tab" data-t="archive" onclick="go('archive')"><div class="ti">🗺️</div><div class="tl">발자취</div></div>
+    <div class="tab" data-t="member" onclick="go('member')"><div class="ti">🛡</div><div class="tl">멤버십</div></div>
+  </div>
+
+  <!-- share overlay -->
+  <div class="ov" id="ov">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sharecard">
+        <div class="sl">MY COLLECTOR TYPE</div>
+        <div class="sa" id="shEN">아직 분석 전</div>
+        <div class="sk"><span id="shKR">전시에 반응하면 유형이 잡혀요</span> · 다녀온 전시 <span id="shv">0</span></div>
+        <div class="ss">COVET · 내 손안의 갤러리</div>
+      </div>
+      <div class="nextstep">친구도 자기 유형이 궁금할걸요</div>
+      <button class="cta sm" onclick="shareNative()">내 유형 카드 공유하기 ↗</button>
+      <button class="cta sm ghost" style="margin-top:8px" onclick="closeShare()">나도 다른 유형 둘러보기</button>
+      <div class="closex" onclick="closeShare()">닫기</div>
+    </div>
+  </div>
+
+  <!-- 구매 결정 overlay = the money moment -->
+  <div class="ov" id="ovd">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div style="font-family:'Archivo';font-weight:800;font-size:10px;letter-spacing:.08em;color:var(--acc)">BEFORE YOU BUY</div>
+      <div style="font-size:19px;font-weight:800;margin:4px 0 2px">이 작품, 사도 될까요?</div>
+      <div style="font-size:12.5px;color:var(--gray);margin-bottom:14px"><b id="dwork" style="color:var(--ink)">작품</b> · 갤러리 제시가 <b id="dprice" style="color:var(--ink)">₩—</b></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="border:1px solid var(--line);border-radius:12px;padding:13px;background:#fbf0ec">
+          <div style="font-size:11px;font-weight:800;color:var(--warn);margin-bottom:7px">혼자 사면</div>
+          <div style="font-size:12px;color:#55534c;line-height:1.8">· 가격이 적정한지 모름<br>· 위작·에디션 리스크<br>· 작가가 뜰지 모름<br>· 되팔 수 있나 불안</div>
+        </div>
+        <div style="border:1.5px solid var(--acc);border-radius:12px;padding:13px;background:var(--soft)">
+          <div style="font-size:11px;font-weight:800;color:var(--acc);margin-bottom:7px">전문가 검증을 받으면</div>
+          <div style="font-size:12px;color:#3a2a52;line-height:1.8">· 제시가 적정/고평가 판정<br>· 작가 궤적·기관 신호<br>· 진위·프로비넌스 체크<br>· 협상 여지 코멘트</div>
+        </div>
+      </div>
+
+      <div style="background:var(--soft);border:1px solid #ddd0f0;color:#3a2a52;border-radius:12px;padding:13px 15px;margin:14px 0;font-size:13px;line-height:1.65">
+        처음엔 누구나 모르고 시작해요. <b id="dbig" style="color:var(--ink)">₩—</b> 작품, 사기 전에 <b style="color:var(--acc)">검수자 패널이 15분만 같이 봐드릴게요</b> — 데이터로 가격·진위·협상 여지까지.
+      </div>
+
+      <button class="cta sm ghost" onclick="openSample()">📄 먼저, 무료 샘플 리포트 보기</button>
+      <button class="cta sm" style="margin-top:8px" onclick="pay('verify')">🤝 사기 전 검증 받기 · ₩49,000 <span style="opacity:.85;font-weight:600">(멤버십 크레딧이면 무료)</span></button>
+      <button class="cta sm ghost" style="margin-top:8px" onclick="pay('sourcing')">이 작품 구해주세요 — 1:1 소싱 문의</button>
+      <div class="closex" onclick="closeDecision()">닫기</div>
+    </div>
+  </div>
+
+  <!-- 전시 공유 overlay (전시 맥락) -->
+  <div class="ov" id="ovx">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sharecard" id="exShareCard" style="text-align:left">
+        <div class="sl">이 전시, 함께 볼래?</div>
+        <div class="sa" id="exsArt" style="font-size:21px;margin-top:9px">전시명</div>
+        <div class="sk" style="margin-top:4px"><span id="exsVen">갤러리</span></div>
+        <div class="ss" id="exsMeta" style="margin-top:9px">지역 · 기간</div>
+      </div>
+      <div class="nextstep">친구에게 같이 보자고 보내보세요</div>
+      <button class="cta sm" onclick="shareExhNative()">친구에게 전시 공유하기 ↗</button>
+      <button class="cta sm ghost" id="exsWatchBtn" style="margin-top:8px" onclick="watchFromShare()">♡ '가봐야지'에 담기</button>
+      <div class="closex" onclick="closeExhShare()">닫기</div>
+    </div>
+  </div>
+
+  <!-- 취향 테스트 overlay -->
+  <div class="ov" id="ovq">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div id="quizBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- real Seoul exhibitions (June 2026) ---------- */
+var EX=[
+ /* ── 한남 ── */
+ {id:'e1',art:'티노 세갈',sub:'Tino Sehgal · 라이브 퍼포먼스',ven:'리움미술관 M2',dist:'한남',date:'~2026.06.28',price:'유료',badge:'퍼포먼스',g:'linear-gradient(135deg,#5b3fa0,#241043)',pick:true,f:'추상',t:'대담',e:'이머징'},
+ {id:'e2',art:'APMA, 소장품 기획',sub:'동시대 컬렉션 하이라이트',ven:'아모레퍼시픽미술관(APMA)',dist:'한남',date:'~2026.08.16',price:'유료',badge:'미술관',g:'linear-gradient(135deg,#455a64,#161e22)',f:'구상',t:'고요',e:'클래식'},
+ {id:'e3',art:'이강소',sub:'Lee Kang-so',ven:'타데우스 로팍 서울',dist:'한남',date:'~2026.07.18',price:'무료',badge:'블루칩',g:'linear-gradient(135deg,#6d4c41,#2a1a14)',f:'추상',t:'고요',e:'클래식'},
+ {id:'e4',art:'WHEN SPACE BECOMES PAINTING',sub:'공간이 회화가 될 때 · 그룹전',ven:'BB&M',dist:'한남',date:'~2026.06.20',price:'무료',badge:'그룹전',g:'linear-gradient(135deg,#2e7d6b,#10302a)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e5',art:'한남 새터데이즈',sub:'로팍·리만머핀·에스더 쉬퍼·디스위켄드룸 외 12곳',ven:'한남동 갤러리 클러스터',dist:'한남',date:'2026.06.13~',price:'무료',badge:'갤러리 투어',g:'linear-gradient(135deg,#7b5cc9,#2e1a55)',f:'추상',t:'대담',e:'이머징'},
+ /* ── 북촌(삼청·소격·안국) ── */
+ {id:'e6',art:'양혜규',sub:'Haegue Yang',ven:'국제갤러리 K2·K3',dist:'북촌',date:'~2026.07.26',price:'무료',badge:'블루칩',g:'linear-gradient(135deg,#8e24aa,#3a0e4a)',pick:true,f:'추상',t:'대담',e:'이머징'},
+ {id:'e7',art:'이건용: 신체 드로잉',sub:'Lee Kun-yong',ven:'갤러리현대',dist:'북촌',date:'~2026.07.12',price:'무료',badge:'한국 현대',g:'linear-gradient(135deg,#b5482a,#5a1d10)',f:'구상',t:'대담',e:'클래식'},
+ {id:'e8',art:'단색화와 그 이후',sub:'한국 추상의 계보',ven:'학고재',dist:'북촌',date:'~2026.07.05',price:'무료',badge:'기획전',g:'linear-gradient(135deg,#546e7a,#1c272c)',f:'추상',t:'고요',e:'클래식'},
+ {id:'e9',art:'강철규: 버림받은 숙주',sub:'Kang Cheolkyu',ven:'아라리오갤러리 서울',dist:'북촌',date:'~2026.06.20',price:'무료',badge:'이머징',g:'linear-gradient(135deg,#33691e,#13230a)',f:'구상',t:'대담',e:'이머징'},
+ {id:'e10',art:'Seeing, Again',sub:'다시, 보다 · 그룹전',ven:'탕 컨템포러리(Tang)',dist:'북촌',date:'~2026.06.27',price:'무료',badge:'그룹전',g:'linear-gradient(135deg,#3949ab,#13183d)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e11',art:'유영국: 산',sub:'Yoo Youngkuk',ven:'PKM 갤러리',dist:'북촌',date:'~2026.08.09',price:'무료',badge:'근현대 거장',g:'linear-gradient(135deg,#1a237e,#0a0e2a)',pick:true,f:'추상',t:'고요',e:'클래식'},
+ /* ── 종로(소격·세종) ── */
+ {id:'e12',art:'데이미언 허스트',sub:'Damien Hirst · 아시아 최대 개인전',ven:'국립현대미술관 서울(MMCA)',dist:'종로',date:'~2026.07.05',price:'유료',badge:'블록버스터',g:'linear-gradient(135deg,#c2185b,#3a0a2a)',pick:true,f:'추상',t:'대담',e:'클래식'},
+ {id:'e13',art:'도호수',sub:'Do Ho Suh',ven:'국립현대미술관 서울(MMCA)',dist:'종로',date:'~2026.10.12',price:'유료',badge:'블록버스터',g:'linear-gradient(135deg,#37474f,#0d1316)',pick:true,f:'구상',t:'고요',e:'이머징'},
+ {id:'e14',art:'정금형',sub:'Geumhyung Jeong · 퍼포먼스/설치',ven:'아트선재센터',dist:'종로',date:'~2026.08.02',price:'유료',badge:'동시대',g:'linear-gradient(135deg,#ad1457,#3a0a24)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e15',art:'금호영아티스트',sub:'신진 작가 기획',ven:'금호미술관',dist:'종로',date:'~2026.07.19',price:'무료',badge:'신진',g:'linear-gradient(135deg,#00897b,#0a302b)',f:'구상',t:'고요',e:'이머징'},
+ /* ── 강남(청담·도산) ── */
+ {id:'e16',art:'백남준 × 타키스',sub:'Nam June Paik × Takis · 2인전',ven:'화이트큐브 서울',dist:'강남',date:'~2026.07.04',price:'무료',badge:'2인전',g:'linear-gradient(135deg,#455a64,#161e22)',f:'추상',t:'대담',e:'클래식'},
+ {id:'e17',art:'송은 신진 기획',sub:'젊은 한국 작가',ven:'송은(SongEun)',dist:'강남',date:'~2026.08.22',price:'무료',badge:'재단',g:'linear-gradient(135deg,#263238,#0a0f12)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e18',art:'이배: 먹과 숯',sub:'Lee Bae',ven:'페로탕 서울(도산)',dist:'강남',date:'~2026.07.11',price:'무료',badge:'블루칩',g:'linear-gradient(135deg,#212121,#000)',pick:true,f:'추상',t:'고요',e:'클래식'},
+ {id:'e19',art:'글래드스톤 기획전',sub:'동시대 국제 작가',ven:'글래드스톤 갤러리 서울',dist:'강남',date:'~2026.07.25',price:'무료',badge:'국제',g:'linear-gradient(135deg,#5d4037,#241510)',f:'추상',t:'대담',e:'이머징'},
+ /* ── 평창동 ── */
+ {id:'e20',art:'문신',sub:'Moon Shin · 조각 대규모',ven:'가나아트센터',dist:'평창동',date:'~2026.08.30',price:'무료',badge:'조각',g:'linear-gradient(135deg,#6d4c41,#2a1a14)',pick:true,f:'추상',t:'고요',e:'클래식'},
+ {id:'e21',art:'토탈 미디어 기획',sub:'동시대 영상·설치',ven:'토탈미술관',dist:'평창동',date:'~2026.07.20',price:'무료',badge:'미디어',g:'linear-gradient(135deg,#1565c0,#0a2540)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e22',art:'김종영: 조각의 사유',sub:'Kim Chong Yung',ven:'김종영미술관',dist:'평창동',date:'~2026.09.06',price:'무료',badge:'근현대',g:'linear-gradient(135deg,#455a64,#1a2226)',f:'추상',t:'고요',e:'클래식'},
+ /* ── 광화문(정동·신문로) ── */
+ {id:'e23',art:'파리, 보이지 않는 파리',sub:'PARIS UNSEEN',ven:'성곡미술관',dist:'광화문',date:'~2026.07.26',price:'유료',badge:'기획전',g:'linear-gradient(135deg,#3949ab,#13183d)',pick:true,f:'구상',t:'고요',e:'이머징'},
+ {id:'e24',art:'일민미술관 기획전',sub:'동시대 한국 시각문화',ven:'일민미술관',dist:'광화문',date:'~2026.08.16',price:'유료',badge:'기획전',g:'linear-gradient(135deg,#6a1b9a,#2a0a40)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e25',art:'빛: 미디어 아트',sub:'세화 라이트 기획',ven:'세화미술관',dist:'광화문',date:'~2026.09.13',price:'유료',badge:'미디어',g:'linear-gradient(135deg,#283593,#0a0e2a)',f:'추상',t:'고요',e:'이머징'},
+ /* ── 서촌(통의·효자·부암) ── */
+ {id:'e26',art:'디자인×사진 기획전',sub:'대림 시그니처',ven:'대림미술관',dist:'서촌',date:'~2026.09.27',price:'유료',badge:'디자인',g:'linear-gradient(135deg,#ad1457,#3a0a24)',pick:true,f:'구상',t:'대담',e:'이머징'},
+ {id:'e27',art:'보안 실험전',sub:'신진 그룹전',ven:'보안1942',dist:'서촌',date:'2026.06.12~',price:'무료',badge:'실험',g:'linear-gradient(135deg,#37474f,#10171a)',f:'추상',t:'대담',e:'이머징'},
+ {id:'e28',art:'몰입형 미디어전',sub:'Ground Seesaw',ven:'그라운드시소 서촌',dist:'서촌',date:'~2026.08.31',price:'유료',badge:'몰입형',g:'linear-gradient(135deg,#00838f,#0a2a2e)',f:'구상',t:'고요',e:'이머징'},
+ /* ── 홍대(합정·연남) ── */
+ {id:'e29',art:'상상마당 사진전',sub:'신진 사진·기획',ven:'KT&G 상상마당',dist:'홍대',date:'~2026.07.13',price:'무료',badge:'사진',g:'linear-gradient(135deg,#455a64,#161e22)',f:'구상',t:'대담',e:'이머징'},
+ {id:'e30',art:'그문화 신진 회화',sub:'젊은 회화 그룹전',ven:'그문화갤러리',dist:'홍대',date:'~2026.06.29',price:'무료',badge:'신진',g:'linear-gradient(135deg,#6a1b9a,#2a0a40)',f:'구상',t:'고요',e:'이머징'},
+ {id:'e31',art:'산수문화 실험전',sub:'독립 큐레이션',ven:'산수문화',dist:'홍대',date:'2026.06.13~',price:'무료',badge:'독립',g:'linear-gradient(135deg,#33691e,#13230a)',f:'추상',t:'대담',e:'이머징'}
+];
+var DISTRICTS=['전체','한남','북촌','강남','종로','평창동','광화문','서촌','홍대'];
+var state={}; // id -> {h,v,l}
+var filter='전체';
+var view='list'; // 'list' | 'grid'(앨범)
+var quiz=null;   // {f,t,e} 취향 테스트 결과(시드) · 행동 데이터와 합산
+
+/* ===== 결제 사다리 ===== 아래 한 곳에만 Gumroad/토스 링크를 붙이면 전부 연결됩니다 ===== */
+var PAY={
+  r990:    '',  // ₩990  · 첫 안목·검증-lite 단건 리포트  ← 내일 당장 $1
+  verify:  '',  // ₩49,000 · 건별 '사기 전 검증' 풀 리포트
+  member:  '',  // 멤버십 (콘텐츠·검증 크레딧)
+  sourcing:''   // 1:1 소싱·리테이너 자문 문의 (결제 또는 폼 URL)
+};
+var SAMPLE_REPORT_URL='sample.html'; // 무료 샘플 리포트(같은 폴더)
+
+function S(id){return state[id]||(state[id]={h:false,v:false,l:false,x:false});}
+function save(){ try{localStorage.setItem('covet_state',JSON.stringify(state));}catch(err){} }
+function load(){ try{var s=localStorage.getItem('covet_state'); if(s)state=JSON.parse(s)||{};}catch(err){state={};}
+  try{var v=localStorage.getItem('covet_view'); if(v==='list'||v==='table')view=v;}catch(e){}
+  try{var q=localStorage.getItem('covet_quiz'); if(q)quiz=JSON.parse(q)||null;}catch(e){} }
+function pay(which){
+  var url=(which&&PAY[which])||PAY.member;
+  if(url){ location.href=url; }
+  else { alert('결제 링크 연결 전이에요 — 코드 상단 PAY 객체의 "'+(which||'member')+'"에 Gumroad·토스 URL을 넣으면 바로 결제됩니다.'); }
+}
+function openSample(){ if(SAMPLE_REPORT_URL){ window.open(SAMPLE_REPORT_URL,'_blank'); } else { alert('샘플 리포트 파일을 같은 폴더에 두세요.'); } }
+function shareNative(){
+  var a=computeArche(); var txt=a? ('내 컬렉터 유형은 '+a[0]+' ('+a[1]+') — COVET에서 확인했어요'):'COVET에서 내 컬렉터 유형 찾기';
+  if(navigator.share){ navigator.share({title:'COVET · 내 컬렉터 유형',text:txt}).catch(function(){}); }
+  else { alert('공유 카드를 캡처해서 친구에게 보내보세요 ↗\n\n'+txt); }
+}
+
+/* 행동 기반 7 아키타입 (기획 IP 룰셋) */
+var ARCH={
+ '구상|고요|클래식':['The Romantic','낭만의 수집가'],
+ '구상|고요|이머징':['The Intimist','조용한 관찰자'],
+ '구상|대담|클래식':['The Iconographer','아이콘의 수집가'],
+ '구상|대담|이머징':['The Provocateur','도발의 안목'],
+ '추상|고요|클래식':['The Quiet Modernist','침묵의 모더니스트'],
+ '추상|고요|이머징':['The Quiet Modernist','침묵의 모더니스트'],
+ '추상|대담|클래식':['The Connoisseur','세련된 감식가'],
+ '추상|대담|이머징':['The Expressionist','표현의 개척자']
+};
+var OPP={'구상':'추상','추상':'구상','고요':'대담','대담':'고요','클래식':'이머징','이머징':'클래식'};
+function tasteWeights(){
+ var f={'구상':0,'추상':0},t={'고요':0,'대담':0},e={'클래식':0,'이머징':0},n=0;
+ EX.forEach(function(x){var s=S(x.id);
+   var w=(s.h?1:0)+(s.v?2:0)+(s.l?2:0);
+   if(w){n++; f[x.f]+=w; t[x.t]+=w; e[x.e]+=w;}
+   if(s.x){ n++; f[OPP[x.f]]+=2; t[OPP[x.t]]+=2; e[OPP[x.e]]+=2; }  // 안 볼래요 → 반대 취향 가중
+ });
+ if(quiz){ n+=2; f[quiz.f]+=3; t[quiz.t]+=3; e[quiz.e]+=3; }       // 취향 테스트 시드(콜드스타트)
+ return {f:f,t:t,e:e,n:n};
+}
+function computeArche(){
+ var w=tasteWeights(); if(w.n<2) return null;
+ var key=(w.f['추상']>=w.f['구상']?'추상':'구상')+'|'+(w.t['대담']>w.t['고요']?'대담':'고요')+'|'+(w.e['이머징']>w.e['클래식']?'이머징':'클래식');
+ return ARCH[key]||ARCH['추상|고요|클래식'];
+}
+function renderArche(){
+ var en=document.getElementById('archEN'); if(!en) return;
+ var a=computeArche();
+ var shEN=document.getElementById('shEN'), shKR=document.getElementById('shKR');
+ if(!a){ en.textContent='아직 분석 전';
+   document.getElementById('archKR').textContent='발견 탭에서 ♡·다녀옴·★를 남기면 유형이 잡혀요';
+   document.getElementById('archDesc').textContent='전시 2개 이상에 반응하면 7가지 컬렉터 유형 중 당신의 좌표가 또렷해집니다.';
+   if(shEN){shEN.textContent='아직 분석 전'; shKR.textContent='전시에 반응하면 유형이 잡혀요';}
+   return; }
+ en.textContent=a[0];
+ document.getElementById('archKR').textContent=a[1]+' · 당신의 실제 반응 기반';
+ document.getElementById('archDesc').textContent='다녀온 전시와 ★ 반응을 분석한 결과예요. 더 남길수록 정교해집니다.';
+ if(shEN){shEN.textContent=a[0]; shKR.textContent=a[1];}
+ renderTypeExhibs();
+}
+
+/* 무료 콘텐츠: 이 유형이 끌리는 전시 (가격 없음 = 구매 권유 아님) */
+function renderTypeExhibs(){
+ var el=document.getElementById('typeExhibs'); if(!el) return;
+ var a=computeArche();
+ var pool = a ? EX.filter(function(e){ return (a[0]==='The Quiet Modernist'||a[0]==='The Connoisseur'||a[0]==='The Expressionist')? e.f==='추상' : e.f==='구상'; }) : [];
+ if(pool.length<3) pool = EX.filter(function(e){return e.pick;});
+ var arr=pool.slice(0,3);
+ el.innerHTML=arr.map(function(e){
+   return '<div style="display:flex;gap:11px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">'
+     +'<div style="width:44px;height:44px;border-radius:9px;flex:none;background:'+e.g+'"></div>'
+     +'<div style="flex:1"><b style="font-size:13px">'+e.art+'</b><br><span style="font-size:11px;color:var(--gray)">'+e.ven+' · '+e.dist+'</span></div>'
+     +'<span style="font-size:11px;font-weight:700;color:'+(e.price==='무료'?'var(--win)':'var(--warn)')+'">'+e.price+'</span></div>';
+ }).join('');
+}
+
+/* 구매 토글 뒤 작품 — 예산 안의 것만 + 추천 이유 한 줄 */
+var WORKS=[
+ {t:'블루칩 에디션 — 판화', meta:'에디션 /75 · 입문 안전판', price:240, g:'linear-gradient(135deg,#b8a6e0,#6d33c9)', why:'검증된 작가의 에디션이라 첫 구매 리스크가 낮아요'},
+ {t:'단색화 계보 신진 — 〈무제〉', meta:'캔버스 60×50 · 절제된 호흡', price:320, g:'linear-gradient(135deg,#cfc3e8,#8e79bf)', why:'고요·추상 취향과 결이 맞아요'},
+ {t:'동시대 추상 신진 — 시리즈作', meta:'145×112 · 갤러리 승급 신호', price:680, g:'linear-gradient(135deg,#9fd0c0,#2c7a4b)', why:'대담한 색·구성을 좋아하는 분께'}
+];
+var BUDGETS=[{l:'~₩100만',max:100},{l:'~₩300만',max:300},{l:'~₩500만',max:500},{l:'~₩1,000만',max:1000},{l:'₩1,000만+',max:999999}];
+function renderWorks(){
+ var on=document.getElementById('buyToggle').checked;
+ document.getElementById('buyPanel').style.display=on?'block':'none';
+ if(!on) return;
+ var bi=+document.getElementById('budget').value, b=BUDGETS[bi]||BUDGETS[2];
+ document.getElementById('budgetLabel').textContent=b.l;
+ var arr=WORKS.filter(function(w){return w.price<=b.max;});
+ document.getElementById('works').innerHTML = arr.length ? arr.map(function(w){
+   var nm=w.t.replace(/'/g,'');
+   return '<div style="display:flex;gap:11px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:13px">'
+     +'<div style="width:52px;height:52px;border-radius:8px;flex:none;background:'+w.g+'"></div>'
+     +'<div><b style="font-size:13px">'+w.t+'</b><br><span style="font-size:11px;color:var(--gray)">'+w.meta+' · 진입가 ₩'+w.price+'만</span>'
+     +'<br><span style="font-size:11px;color:var(--acc)">↳ '+w.why+'</span></div></div>'
+     +'<button class="cta sm ghost" style="margin:8px 0 14px" onclick="openDecision(\''+nm+'\',\'₩'+w.price+'만\')">🤝 사기 전 같이 봐요</button>';
+ }).join('') : '<div class="empty" style="padding:22px"><div class="ic">🎨</div>이 예산대의 작품을 준비 중이에요.<br>예산을 조금 올려보세요.</div>';
+}
+
+/* ===== v2.1 리텐션 — ①주간리듬 ②가변보상 ③락인 ④외부트리거 ===== */
+var NOW=new Date(2026,5,16); // 데모 기준일(전시 시즌). D-day 계산용.
+function exEnd(e){ var m=/~(\d{4})\.(\d{1,2})\.(\d{1,2})/.exec(e.date); return m? new Date(+m[1],+m[2]-1,+m[3]) : null; }
+function exStart(e){ var m=/(\d{4})\.(\d{1,2})\.(\d{1,2})~/.exec(e.date); return m? new Date(+m[1],+m[2]-1,+m[3]) : null; }
+function dday(e){ var en=exEnd(e); if(!en) return null; return Math.ceil((en-NOW)/864e5); }
+
+/* 시장 펄스(데모) — 특정 작가에 묶이는 외부 트리거 */
+var PULSE={ e18:'경매 신기록 — 동일 작가 대표작 최근 낙찰가 경신', e16:'백남준 미디어작 기관 수요 ↑ — 2차 시장 주목', e6:'양혜규 해외 비엔날레 — 기관 수요 주목', e12:'블루칩 대형전 연계 — 시장 관심 집중' };
+
+/* ① 검수자 인사이트 피드 (가변 보상 = 들어오면 배움) */
+var INSIGHTS=[
+ ['단색화는 \'비움\'을 그립니다','캔버스의 여백이 곧 작가의 호흡 — 채움보다 덜어냄을 보세요.'],
+ ['신진은 \'기관 전시 이력\'부터','미술관이 먼저 알아본 작가가 시장보다 앞섭니다.'],
+ ['첫 컬렉션엔 에디션 판화','같은 작가 유니크보다 진입가가 낮고 환금성이 좋아요.'],
+ ['가격이 의심되면 호당가로 역산','\'호당가 × 호수\'로 1차가를 가늠해보세요.'],
+ ['좋아 보일수록 한 문장으로','\'왜 좋은지\'를 적으면 안목은 언어에서 자랍니다.'],
+ ['갤러리 \'승급 신호\'를 읽기','부스 위치·도록·전속 전환이 작가의 다음을 말합니다.'],
+ ['살 때보다 팔 때를 상상하기','2차 시장 출현 빈도 = 환금성. 보유 전제로 사세요.'],
+ ['프리즈 시즌은 관찰의 시간','9월엔 사기보다 \'보는 눈\'을 기르기 좋습니다.']
+];
+var insightIdx=Math.floor(Date.now()/864e5)%INSIGHTS.length;
+function renderInsight(){
+ var el=document.getElementById('insightCard'); if(!el) return;
+ if(tasteWeights().n<2){ el.style.display='none'; el.innerHTML=''; return; }  // 콜드스타트엔 숨김 → 행동 2건 후 등장
+ el.style.display='';
+ var x=INSIGHTS[insightIdx%INSIGHTS.length];
+ el.innerHTML='<div class="il">◆ 오늘의 안목 · 검수자 패널</div><div class="inext" onclick="cycleInsight()">다른 안목 →</div>'
+   +'<div class="iq">'+x[0]+'</div><div class="iby">'+x[1]+'</div>';
+}
+function cycleInsight(){ insightIdx=(insightIdx+1)%INSIGHTS.length; renderInsight(); }
+
+/* ② 때맞춘 알림 (외부 트리거: 마감임박·시장펄스·새 전시) */
+function buildNudges(){
+ var out=[];
+ EX.forEach(function(e){ var d=dday(e); if(d!==null&&d>=0&&d<=12){ var liked=S(e.id).h;
+   out.push({pri:liked?0:2,ico:liked?'❤️':'⏳',kind:'soon',d:'D-'+d,t:(liked?'<b>♡한 전시</b> ':'')+'<b>'+e.art+'</b> '+d+'일 뒤 종료 · '+e.dist}); } });
+ EX.forEach(function(e){ var s=S(e.id); if((s.h||s.v||s.l)&&PULSE[e.id]){
+   out.push({pri:1,ico:'📈',kind:'pulse',d:'NEW',t:'<b>'+e.art+'</b> — '+PULSE[e.id]}); } });
+ EX.forEach(function(e){ var st=exStart(e); if(st){ var ago=Math.floor((NOW-st)/864e5); if(ago>=0&&ago<=14){
+   out.push({pri:3,ico:'✨',kind:'new',d:'NEW',t:'이번 주 새 전시 — <b>'+e.art+'</b> · '+e.dist}); } } });
+ out.sort(function(a,b){return a.pri-b.pri;});
+ return out.slice(0,3);
+}
+function renderNudges(){
+ var el=document.getElementById('nudges'); if(!el) return;
+ var n=tasteWeights().n, bell=document.getElementById('bellCount');
+ var html='';
+ if(n===0){ html+='<div class="nudge" onclick="startQuiz()"><span class="ni">✦</span><span class="nt"><b>30초 취향 테스트</b>로 시작하기 — 내 컬렉터 유형 찾기</span><span class="nd pulse">START</span></div>'; }
+ var arr = (n>=2) ? buildNudges() : [];   // 콜드스타트엔 알림 숨김
+ if(bell) bell.textContent=arr.length;
+ if(arr.length){ html+='<div class="jhead" style="margin:2px 0 9px">🔔 오늘의 알림</div>'+arr.map(function(nd){
+   return '<div class="nudge" onclick="go(\'archive\')"><span class="ni">'+nd.ico+'</span><span class="nt">'+nd.t+'</span><span class="nd '+nd.kind+'">'+nd.d+'</span></div>';
+ }).join(''); }
+ el.innerHTML=html;
+}
+
+/* ③ 안목 일지: 취향 그래프 + 연말 Wrapped + 워치리스트 (락인) */
+function tastePcts(){
+ var w=tasteWeights();
+ function pc(o,k){var ks=Object.keys(o),tot=o[ks[0]]+o[ks[1]]; return tot?Math.round(o[k]/tot*100):50;}
+ return {any:w.n,f:pc(w.f,'추상'),t:pc(w.t,'대담'),e:pc(w.e,'이머징')};
+}
+function renderSpec(){
+ var el=document.getElementById('tasteSpec'); if(!el) return;
+ var p=tastePcts();
+ if(!p.any){ el.innerHTML='<div class="jhead">취향 변화</div><div style="border:1px dashed var(--line);border-radius:12px;padding:16px;font-size:12.5px;color:var(--gray);text-align:center">전시에 ♡·다녀옴·★를 남기면<br>당신의 취향 좌표가 그려져요.</div>'; return; }
+ function row(l,r,v){return '<div class="row"><div class="lbl"><span>'+l+'</span><span>'+r+'</span></div><div class="bar"><div class="pin" style="left:'+v+'%"></div></div></div>';}
+ el.innerHTML='<div class="jhead">취향 변화 — 쌓일수록 또렷해져요</div><div class="spec">'+row('구상','추상',p.f)+row('고요','대담',p.t)+row('클래식','이머징',p.e)+'</div>';
+}
+function renderWrapped(){
+ var el=document.getElementById('wrapped'); if(!el) return;
+ var V=0,L=0,total=0,dists={};
+ EX.forEach(function(e){var s=S(e.id); if(s.h||s.v||s.l){total++; if(s.v)V++; if(s.l)L++; dists[e.dist]=(dists[e.dist]||0)+1;}});
+ if(total<2){ el.innerHTML=''; return; }
+ var topDist='—',mx=0; for(var d in dists){ if(dists[d]>mx){mx=dists[d];topDist=d;} }
+ var a=computeArche();
+ el.innerHTML='<div class="wrapped"><div class="wl">2026 · 나의 안목 결산</div><div class="wt">올해의 컬렉터, 당신</div><div class="wg">'
+   +'<div class="wc"><div class="wn">'+total+'</div><div class="wk">반응한 전시</div></div>'
+   +'<div class="wc"><div class="wn sm">'+(a?a[1]:'분석중')+'</div><div class="wk">가장 끌린 유형</div></div>'
+   +'<div class="wc"><div class="wn">'+topDist+'</div><div class="wk">최애 동네</div></div>'
+   +'<div class="wc"><div class="wn">'+L+'</div><div class="wk">★ 좋았어요</div></div>'
+   +'</div><button class="cta sm" style="margin-top:12px;background:#fff;color:var(--acc)" onclick="openShare()">내 2026 안목 카드 공유 ↗</button></div>';
+}
+function renderWatch(){
+ var el=document.getElementById('watchlist'); if(!el) return;
+ var arr=EX.filter(function(e){var s=S(e.id); return s.h && !(s.v||s.l);});
+ arr.sort(function(a,b){var da=dday(a),db=dday(b); da=(da===null?9999:da); db=(db===null?9999:db); return da-db;});
+ if(!arr.length){ el.innerHTML=''; return; }
+ el.innerHTML='<div class="jhead">🎯 가봐야지 — ♡ 관심 전시</div>'+arr.map(function(e){
+   var d=dday(e),en=exEnd(e);
+   var badge = d===null?'':(d<=14?'<span class="dbadge soon">D-'+d+' 종료</span>':'<span class="dbadge ok">~'+(en.getMonth()+1)+'/'+en.getDate()+'</span>');
+   return '<div class="arow"><div class="sq" style="background:'+e.g+'"></div><div class="at"><b>'+e.art+'</b><span>'+e.ven+' · '+e.dist+'</span></div>'+badge+'</div>';
+ }).join('');
+}
+
+/* 안목 코스 — 멤버십 페이지에 매주 연재되는 교육 콘텐츠 (1화 무료, 이후 멤버십) */
+var COURSE=[
+ {t:'1화 · 왜 사느냐가 먼저다', free:true, body:'사기 전에 "왜 이 작품인가"를 한 문장으로 적어보세요. 장식·애호·투자 — 목적이 다르면 좋은 작품의 기준도 달라집니다. 목적이 또렷하면 충동구매가 줄고, 흔들릴 때 돌아올 기준이 생겨요.'},
+ {t:'2화 · 가격, 이렇게 읽는다', free:false, body:''},
+ {t:'3화 · 진짜인지 확인하는 법 (진위·출처)', free:false, body:''},
+ {t:'4화 · 신진 작가의 ‘뜨는 신호’ 읽기', free:false, body:''},
+ {t:'5화 · 살 때보다 ‘팔 때’를 보는 눈', free:false, body:''},
+ {t:'6화 · 갤러리·딜러와 대화하는 법', free:false, body:''}
+];
+function renderCourse(){
+ var el=document.getElementById('courseList'); if(!el) return;
+ el.innerHTML=COURSE.map(function(c,i){
+   var last=(i===COURSE.length-1);
+   var head='<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="'+(c.free?'toggleLesson('+i+')':'lockedLesson()')+'">'
+     +'<span style="font-size:14px">'+(c.free?'▶':'🔒')+'</span>'
+     +'<div style="flex:1;font-size:13px;font-weight:'+(c.free?'800':'600')+';color:'+(c.free?'var(--ink)':'var(--gray)')+'">'+c.t+'</div>'
+     +'<span class="arc" style="font-size:9px;font-weight:800;color:'+(c.free?'var(--win)':'var(--acc)')+';background:'+(c.free?'var(--winsoft)':'var(--soft)')+';padding:3px 8px;border-radius:20px">'+(c.free?'무료':'멤버십')+'</span></div>';
+   var lesson=c.free?'<div id="lesson'+i+'" style="display:none;font-size:12.5px;color:#55534c;line-height:1.65;margin:9px 0 2px;padding-left:24px">'+c.body+'</div>':'';
+   return '<div style="padding:12px 0'+(last?'':';border-bottom:1px solid var(--line)')+'">'+head+lesson+'</div>';
+ }).join('');
+}
+function toggleLesson(i){ var el=document.getElementById('lesson'+i); if(el) el.style.display = (el.style.display==='none'?'block':'none'); }
+function lockedLesson(){ alert('이 화는 멤버십에서 열려요 — 매주 1화씩 발행됩니다. 1화는 무료로 먼저 읽어보세요.'); }
+
+/* ===== 취향 테스트 (콜드스타트 + 바이럴 결과 카드) ===== */
+var QUIZ=[
+ {key:'f', q:'더 끌리는 그림은?', opts:[
+   {v:'구상', t:'형상이 보이는', s:'풍경·인물·사물', g:'linear-gradient(135deg,#b5482a,#5a1d10)'},
+   {v:'추상', t:'형태가 없는', s:'색·선·면의 울림', g:'linear-gradient(135deg,#5b3fa0,#241043)'} ]},
+ {key:'t', q:'전시장에서 더 오래 머무는 작품은?', opts:[
+   {v:'고요', t:'차분하고 절제된', s:'여백·정적', g:'linear-gradient(135deg,#37474f,#0d1316)'},
+   {v:'대담', t:'강렬하고 실험적인', s:'에너지·도발', g:'linear-gradient(135deg,#c2185b,#3a0a2a)'} ]},
+ {key:'e', q:'첫 컬렉션, 어느 쪽?', opts:[
+   {v:'클래식', t:'검증된 거장', s:'안정·계보', g:'linear-gradient(135deg,#1a237e,#0a0e2a)'},
+   {v:'이머징', t:'새로운 신진', s:'발견·가능성', g:'linear-gradient(135deg,#2e7d6b,#10302a)'} ]}
+];
+var quizAns={}, quizStep=0;
+function startQuiz(){ quizAns={}; quizStep=0; renderQ(); document.getElementById('ovq').classList.add('on'); }
+function closeQuiz(){ document.getElementById('ovq').classList.remove('on'); }
+function renderQ(){
+ var q=QUIZ[quizStep];
+ var two=(q.opts.length===2);
+ var opts=q.opts.map(function(o){
+   var vp=(typeof o.v==='number')?o.v:("'"+o.v+"'");
+   if(two){
+     return '<div class="qbox" onclick="answerQuiz(\''+q.key+'\','+vp+')">'
+       +'<div class="qimg" style="background:'+o.g+'"></div>'
+       +'<div class="qcap"><b>'+o.t+'</b><span>'+o.s+'</span></div></div>';
+   }
+   return '<div class="qopt" onclick="answerQuiz(\''+q.key+'\','+vp+')">'
+     +'<div class="qsq" style="background:'+o.g+'"></div>'
+     +'<div class="ql"><b>'+o.t+'</b><span>'+o.s+'</span></div></div>';
+ }).join('');
+ document.getElementById('quizBody').innerHTML=
+   '<div class="qprog">취향 테스트 · '+(quizStep+1)+' / '+QUIZ.length+'</div>'
+   +'<div class="qq">'+q.q+'</div><div class="qopts'+(two?' two':'')+'">'+opts+'</div>'
+   +'<div class="closex" onclick="closeQuiz()">나중에 할게요</div>';
+}
+function answerQuiz(key,val){ quizAns[key]=val; quizStep++; if(quizStep<QUIZ.length){ renderQ(); } else { finishQuiz(); } }
+function finishQuiz(){
+ quiz={f:quizAns.f,t:quizAns.t,e:quizAns.e};
+ try{localStorage.setItem('covet_quiz',JSON.stringify(quiz));}catch(e){}
+ renderArche(); renderList(); renderArchive(); renderAcc(); renderNudges();
+ showQuizResult();
+}
+function showQuizResult(){
+ var a=ARCH[quiz.f+'|'+quiz.t+'|'+quiz.e]||ARCH['추상|고요|클래식'];
+ var p=tastePcts();
+ function row(l,r,v){return '<div class="row"><div class="lbl"><span>'+l+'</span><span>'+r+'</span></div><div class="bar"><div class="pin" style="left:'+v+'%"></div></div></div>';}
+ var pool=EX.filter(function(x){return x.f===quiz.f;}); if(pool.length<2) pool=EX.filter(function(e){return e.pick;});
+ var exr=pool.slice(0,2).map(function(e){
+   return '<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><div style="width:38px;height:38px;border-radius:8px;flex:none;background:'+e.g+'"></div><div style="flex:1;min-width:0"><b style="font-size:12.5px">'+e.art+'</b><br><span style="font-size:10.5px;color:var(--gray)">'+e.ven+' · '+e.dist+'</span></div><span style="font-size:10.5px;font-weight:700;color:'+(e.price==='무료'?'var(--win)':'var(--warn)')+'">'+e.price+'</span></div>';
+ }).join('');
+ document.getElementById('quizBody').innerHTML=
+   '<div class="qrescard"><div class="rl">MY COLLECTOR TYPE</div>'
+   +'<div class="ren">'+a[0]+'</div><div class="rkr">'+a[1]+'</div>'
+   +'<div class="rds">당신은 <b>'+quiz.f+'</b>·<b>'+quiz.t+'</b>한 작품과 <b>'+quiz.e+'</b> 작가에 끌리는 타입이에요.</div></div>'
+   +'<div class="spec" style="margin:0 2px 4px">'+row('구상','추상',p.f)+row('고요','대담',p.t)+row('클래식','이머징',p.e)+'</div>'
+   +'<div class="jhead" style="margin:14px 0 4px">이런 전시에 끌려요</div>'+exr
+   +'<button class="cta sm" style="margin-top:14px" onclick="shareNative()">친구에게 결과 공유하기 ↗</button>'
+   +'<button class="cta sm ghost" style="margin-top:8px" onclick="closeQuiz();go(\'discover\')">내 유형의 전시 보기 →</button>'
+   +'<div class="closex" onclick="startQuiz()">다시 하기</div>';
+}
+function pickBudgetFromResult(bi){
+ var bt=document.getElementById('buyToggle'); if(bt) bt.checked=true;
+ var bs=document.getElementById('budget'); if(bs) bs.value=bi;
+ renderWorks();
+ closeQuiz(); go('foryou');
+ setTimeout(function(){ var pn=document.getElementById('buyPanel'); if(pn) pn.scrollIntoView({behavior:'smooth',block:'center'}); },80);
+}
+
+/* ===== 친구의 안목 (바이럴·락인) ===== */
+var FRIENDS=[
+ {n:'지우', rel:'연인', en:'The Quiet Modernist', kr:'침묵의 모더니스트', g:'linear-gradient(135deg,#5b3fa0,#241043)', last:'리움 · 티노 세갈 ♡'},
+ {n:'민준', rel:'친구', en:'The Provocateur', kr:'도발의 안목', g:'linear-gradient(135deg,#c2185b,#3a0a2a)', last:'아라리오 · 강철규 ✓'},
+ {n:'엄마', rel:'가족', en:'The Romantic', kr:'낭만의 수집가', g:'linear-gradient(135deg,#b5482a,#5a1d10)', last:'갤러리현대 · 이건용 ★'}
+];
+function renderFriends(){
+ var el=document.getElementById('friends'); if(!el) return;
+ el.innerHTML=FRIENDS.map(function(fr){
+   return '<div class="frow"><div class="fav" style="background:'+fr.g+'">'+fr.n.charAt(0)+'</div>'
+     +'<div class="ft"><b>'+fr.n+' <span style="font-size:10px;color:var(--gray);font-weight:600">· '+fr.rel+'</span></b>'
+     +'<span class="fr2">최근 '+fr.last+'</span></div>'
+     +'<div class="ftype">'+fr.kr+'</div></div>';
+ }).join('');
+}
+function inviteFriend(){
+ var a=computeArche();
+ var txt= a? ('내 컬렉터 유형은 '+a[0]+'('+a[1]+')! 너는 어떤 타입이야? COVET에서 같이 안목 키우자'):'COVET에서 같이 전시 보고 안목 키우자';
+ if(navigator.share){ navigator.share({title:'COVET · 친구 초대',text:txt}).catch(function(){}); }
+ else { alert('친구에게 초대 링크를 보내보세요 ↗\n\n'+txt); }
+}
+
+/* chips */
+function renderChips(){
+  var c=document.getElementById('chips'); c.innerHTML='';
+  DISTRICTS.forEach(function(d){
+    var el=document.createElement('div'); el.className='chip'+(d===filter?' on':''); el.textContent=d;
+    el.onclick=function(){filter=d; renderChips(); renderList();}; c.appendChild(el);
+  });
+}
+var openActs={};
+function toggleActs(id){ openActs[id]=!openActs[id]; renderList(); }
+function toggleMore(){ var m=document.getElementById('memberMore'),b=document.getElementById('memberMoreBtn'); if(!m)return; var open=(m.style.display==='none'); m.style.display=open?'block':'none'; if(b)b.textContent=open?'－ 접기':'＋ 단건 검증 · 1:1 자문 더 보기'; }
+function card(e){
+  var s=S(e.id), more=openActs[e.id];
+  return '<div class="ex'+(s.x?' dim':'')+'">'+
+    '<div class="poster" style="background:'+e.g+'">'+
+      '<div class="badge">'+e.badge+'</div>'+(e.pick?'<div class="pick">✦ 추천</div>':'')+
+      '<div class="pin"><div class="art">'+e.art+'</div></div>'+
+      '<div class="sub">'+e.sub+'</div>'+
+    '</div>'+
+    '<div class="info"><div class="meta"><span class="dot">◉ '+e.dist+'</span><span>'+e.ven+'</span><span>'+e.date+'</span><span class="'+(e.price==='무료'?'free':'paid')+'">'+e.price+'</span></div></div>'+
+    '<div class="acts">'+
+      '<div class="act'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')"><span class="i">'+(s.h?'♥':'♡')+'</span>관심</div>'+
+      (more?
+        '<div class="act'+(s.v?' on':'')+'" onclick="tog(\''+e.id+'\',\'v\')"><span class="i">✓</span>다녀옴</div>'+
+        '<div class="act'+(s.l?' on':'')+'" onclick="tog(\''+e.id+'\',\'l\')"><span class="i">★</span>좋음</div>'+
+        '<div class="act'+(s.x?' xon':'')+'" onclick="tog(\''+e.id+'\',\'x\')"><span class="i">🚫</span>관심없음</div>'
+      :'')+
+      '<div class="act share" onclick="shareExhibition(\''+e.id+'\')"><span class="i">↗</span>공유</div>'+
+      '<div class="act" onclick="toggleActs(\''+e.id+'\')"><span class="i">'+(more?'×':'⋯')+'</span>'+(more?'접기':'더보기')+'</div>'+
+    '</div></div>';
+}
+/* 앨범(바둑판) 카드 */
+function cardGrid(e){
+  var s=S(e.id);
+  return '<div class="exg'+(s.x?' dim':'')+'">'
+    +'<div class="gp" style="background:'+e.g+'">'
+      +'<div class="gbadge">'+e.badge+'</div>'
+      +(e.pick?'<div class="gpick">✦ 추천</div>':'')
+      +'<div class="gheart'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')">'+(s.h?'♥':'♡')+'</div>'
+      +'<div class="gart">'+e.art+'</div>'
+    +'</div>'
+    +'<div class="gi"><div class="gv">'+e.ven+'<br>◉ '+e.dist+' · '+e.date+'</div>'
+      +'<div class="gpr" style="color:'+(e.price==='무료'?'var(--win)':'var(--warn)')+'">'+e.price+'</div></div>'
+    +'<div class="gacts">'
+      +'<div class="ga'+(s.v?' on':'')+'" onclick="tog(\''+e.id+'\',\'v\')" title="다녀옴">✓</div>'
+      +'<div class="ga'+(s.l?' lon':'')+'" onclick="tog(\''+e.id+'\',\'l\')" title="좋았어요">★</div>'
+      +'<div class="ga'+(s.x?' xon':'')+'" onclick="tog(\''+e.id+'\',\'x\')" title="안 볼래요">🚫</div>'
+      +'<div class="ga" onclick="shareExhibition(\''+e.id+'\')" title="공유">↗</div>'
+    +'</div></div>';
+}
+/* 테이블 행 */
+function cardTable(e){
+  var s=S(e.id);
+  return '<div class="tr'+(s.x?' dim':'')+'">'
+    +'<div class="c-art"><b>'+e.art+'</b><span>'+e.ven+' · '+e.dist+'</span></div>'
+    +'<div class="c-date">'+e.date+'</div>'
+    +'<div class="c-price" style="color:'+(e.price==='무료'?'var(--win)':'var(--warn)')+'">'+e.price+'</div>'
+    +'<div class="c-h'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')">'+(s.h?'♥':'♡')+'</div>'
+  +'</div>';
+}
+function renderList(){
+  var picks=document.getElementById('picks');
+  picks.innerHTML=EX.filter(function(e){return e.pick;}).map(card).join('');
+  var l=document.getElementById('list');
+  var arr=EX.filter(function(e){return filter==='전체'||e.dist===filter;});
+  document.getElementById('alltitle').textContent= filter==='전체'?'지금 열린 전시':(filter+' 전시');
+  if(!arr.length){ l.className=''; l.innerHTML='<div class="empty"><div class="ic">🧭</div>'+filter+' 지역은 등록된 전시를 준비 중이에요.<br>곧 추가됩니다.</div>'; return; }
+  if(view==='grid'){ l.className='grid2'; l.innerHTML=arr.map(cardGrid).join(''); }
+  else if(view==='table'){ l.className=''; l.innerHTML='<div class="tbl"><div class="tr th"><div class="c-art">전시 · 갤러리</div><div class="c-date">기간</div><div class="c-price">가격</div><div class="c-h">♡</div></div>'+arr.map(cardTable).join('')+'</div>'; }
+  else { l.className=''; l.innerHTML=arr.map(card).join(''); }
+}
+function setView(v){
+  view=v; try{localStorage.setItem('covet_view',v);}catch(e){}
+  var ids={list:'vtList',table:'vtTable',grid:'vtGrid'};
+  for(var k in ids){ var b=document.getElementById(ids[k]); if(b) b.classList.toggle('on',k===v); }
+  renderList();
+}
+function tog(id,k){ var s=S(id); s[k]=!s[k];
+  if(s[k]){ if(k==='x'){ s.h=false; s.l=false; } else if(k==='h'||k==='l'){ s.x=false; } }
+  save(); renderList(); renderArchive(); renderAcc(); renderArche(); renderNudges(); renderInsight(); }
+
+/* archive = 안목 일지 */
+function renderArchive(){
+  var H=0,V=0,L=0,X=0,rows='';
+  EX.forEach(function(e){var s=S(e.id); if(s.h)H++; if(s.v)V++; if(s.l)L++; if(s.x)X++;
+    if(s.v||s.l){
+      var tag = s.l?'<span class="tagm l">★ 좋았어요</span>':'<span class="tagm v">✓ 다녀옴</span>';
+      rows+='<div class="arow"><div class="sq" style="background:'+e.g+'"></div><div class="at"><b>'+e.art+'</b><span>'+e.ven+' · '+e.dist+'</span></div>'+tag+'</div>';
+    }});
+  document.getElementById('cH').textContent=H; document.getElementById('cV').textContent=V; document.getElementById('cL').textContent=L;
+  document.getElementById('shv').textContent=V;
+  document.getElementById('dislikeNote').innerHTML = X? '<div style="background:var(--warnsoft);border:1px solid #f0d9d1;border-radius:11px;padding:9px 13px;margin:10px 0 2px;font-size:11.5px;color:#7a3a26">🚫 <b>안 볼래요 '+X+'개</b> — 추천에서 제외하고, 취향 분석에 반대 신호로 반영했어요.</div>' : '';
+  document.getElementById('archlist').innerHTML=rows;
+  document.getElementById('jhead').style.display= rows?'block':'none';
+  document.getElementById('archempty').style.display= (H+V+L+X)?'none':'block';
+  renderSpec(); renderWrapped(); renderWatch(); renderFriends();
+}
+/* accuracy (F2 tease) */
+function renderAcc(){
+  var n=0; EX.forEach(function(e){var s=S(e.id); n+=(s.h?1:0)+(s.v?2:0)+(s.l?1:0)+(s.x?1:0);});
+  var pct=Math.min(95,25+n*7);
+  document.getElementById('accnum').textContent=pct;
+  document.getElementById('accfill').style.width=pct+'%';
+  document.getElementById('accn').textContent=n;
+  document.getElementById('acchint').innerHTML = pct>=80
+    ? '추천 정확도 최고치 근접 — <span style="color:#d6c2ff;font-weight:800">멤버십에서 개인 작품 추천 받기</span>'
+    : '전시에 ♡·다녀옴·★를 남길수록 올라가요. (현재 행동 <span id="accn">'+n+'</span>건)';
+}
+
+/* nav */
+function go(t){
+  ['discover','foryou','archive','member'].forEach(function(x){
+    document.getElementById('sc-'+x).classList.toggle('on',x===t);
+  });
+  document.querySelectorAll('.tab').forEach(function(el){el.classList.toggle('on',el.getAttribute('data-t')===t);});
+  window.scrollTo(0,0);
+}
+function openShare(){document.getElementById('ov').classList.add('on');}
+function closeShare(){document.getElementById('ov').classList.remove('on');}
+
+/* 전시 맥락 공유 ("이 전시 함께 볼래?") */
+var exShareId=null;
+function exById(id){ for(var i=0;i<EX.length;i++){ if(EX[i].id===id) return EX[i]; } return null; }
+function shareExhibition(id){
+  var e=exById(id); if(!e) return; exShareId=id;
+  document.getElementById('exShareCard').style.background=e.g;
+  document.getElementById('exsArt').textContent=e.art;
+  document.getElementById('exsVen').textContent=e.ven;
+  document.getElementById('exsMeta').textContent='◉ '+e.dist+' · '+e.date;
+  document.getElementById('exsWatchBtn').textContent = S(id).h ? "♡ 이미 '가봐야지'에 있어요" : "♡ '가봐야지'에 담기";
+  document.getElementById('ovx').classList.add('on');
+}
+function closeExhShare(){ document.getElementById('ovx').classList.remove('on'); }
+function shareExhNative(){
+  var e=exById(exShareId); if(!e) return;
+  var txt='이 전시 같이 볼래? 「'+e.art+'」 @ '+e.ven+' ('+e.dist+', '+e.date+') — COVET에서 봤어';
+  if(navigator.share){ navigator.share({title:'COVET · 전시 같이 보기',text:txt}).catch(function(){}); }
+  else { alert('전시를 친구에게 보내보세요 ↗\n\n'+txt); }
+}
+function watchFromShare(){
+  if(exShareId){ var s=S(exShareId); if(!s.h){ s.h=true; save(); renderList(); renderArchive(); renderAcc(); renderArche(); renderNudges(); }
+    closeExhShare(); go('archive'); }
+}
+function openDecision(work,price){
+  document.getElementById('dwork').textContent=work;
+  document.getElementById('dprice').textContent=price;
+  document.getElementById('dbig').textContent=price;
+  document.getElementById('ovd').classList.add('on');
+}
+function closeDecision(){document.getElementById('ovd').classList.remove('on');}
+function runVerify(){
+  var v=document.getElementById('vinput').value.trim();
+  if(v){ document.querySelector('#vrep .vl span:last-child').innerHTML='최근 기관 전시·갤러리 승급 신호 점검 <span style="color:var(--win);font-weight:700">· 무료 미리보기 완료</span>'; }
+  go('member');
+}
+
+load(); renderChips(); renderList(); renderArchive(); renderAcc(); renderArche(); renderWorks(); renderInsight(); renderNudges(); renderCourse(); setView(view);
+</script>
+</body>
+</html>
