@@ -362,6 +362,10 @@
         <div class="st"><div class="n" id="cL">0</div><div class="l">★ 좋았어요</div></div>
       </div>
       <div id="dislikeNote"></div>
+      <div style="border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:12px 0">
+        <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:5px">✍️ 내 안목 한 줄 — 공유 카드에 함께 나가요</div>
+        <input id="bio" oninput="saveBio()" maxlength="42" placeholder="예: 단색화 덕후 · 고요한 추상에 약함" style="width:100%;border:none;border-bottom:1px solid var(--line);padding:6px 2px;font-size:13.5px;font-family:'Pretendard';background:none;outline:none">
+      </div>
 
       <div id="tasteSpec"></div>
       <div id="wrapped"></div>
@@ -603,7 +607,9 @@ function S(id){return state[id]||(state[id]={h:false,v:false,l:false,x:false});}
 function save(){ try{localStorage.setItem('covet_state',JSON.stringify(state));}catch(err){} }
 function load(){ try{var s=localStorage.getItem('covet_state'); if(s)state=JSON.parse(s)||{};}catch(err){state={};}
   try{var v=localStorage.getItem('covet_view'); if(v==='list'||v==='table')view=v;}catch(e){}
-  try{var q=localStorage.getItem('covet_quiz'); if(q)quiz=JSON.parse(q)||null;}catch(e){} }
+  try{var q=localStorage.getItem('covet_quiz'); if(q)quiz=JSON.parse(q)||null;}catch(e){}
+  try{bio=localStorage.getItem('covet_bio')||'';}catch(e){} }
+function saveBio(){ bio=document.getElementById('bio').value; try{localStorage.setItem('covet_bio',bio);}catch(e){} renderWrapped(); }
 function pay(which){
   var url=(which&&PAY[which])||PAY.member;
   if(url){ location.href=url; }
@@ -611,7 +617,8 @@ function pay(which){
 }
 function openSample(){ if(SAMPLE_REPORT_URL){ window.open(SAMPLE_REPORT_URL,'_blank'); } else { alert('샘플 리포트 파일을 같은 폴더에 두세요.'); } }
 function shareNative(){
-  var a=computeArche(); var txt=a? ('내 컬렉터 유형은 '+a[0]+' ('+a[1]+') — COVET에서 확인했어요'):'COVET에서 내 컬렉터 유형 찾기';
+  var a=computeArche(); var base=a? ('내 컬렉터 유형은 '+a[0]+' ('+a[1]+')'):'COVET에서 내 컬렉터 유형 찾기';
+  var txt=(bio?'“'+bio+'”\n':'')+base+' — COVET에서 확인했어요';
   if(navigator.share){ navigator.share({title:'COVET · 내 컬렉터 유형',text:txt}).catch(function(){}); }
   else { alert('공유 카드를 캡처해서 친구에게 보내보세요 ↗\n\n'+txt); }
 }
@@ -774,7 +781,8 @@ function renderWrapped(){
  if(total<2){ el.innerHTML=''; return; }
  var topDist='—',mx=0; for(var d in dists){ if(dists[d]>mx){mx=dists[d];topDist=d;} }
  var a=computeArche();
- el.innerHTML='<div class="wrapped"><div class="wl">2026 · 나의 안목 결산</div><div class="wt">올해의 컬렉터, 당신</div><div class="wg">'
+ el.innerHTML='<div class="wrapped"><div class="wl">2026 · 나의 안목 결산</div><div class="wt">올해의 컬렉터, 당신</div>'
+   +(bio?'<div style="font-size:12.5px;color:#e9e2fb;font-style:italic;margin:-6px 0 12px">“'+bio+'”</div>':'')+'<div class="wg">'
    +'<div class="wc"><div class="wn">'+total+'</div><div class="wk">반응한 전시</div></div>'
    +'<div class="wc"><div class="wn sm">'+(a?a[1]:'분석중')+'</div><div class="wk">가장 끌린 유형</div></div>'
    +'<div class="wc"><div class="wn">'+topDist+'</div><div class="wk">최애 동네</div></div>'
@@ -969,7 +977,7 @@ function cardTable(e){
     +'<div class="c-h'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')">'+(s.h?'♥':'♡')+'</div>'
   +'</div>';
 }
-var page=1, PER=6, q='';
+var page=1, PER=6, q='', bio='';
 function onSearch(){ q=document.getElementById('q').value.trim(); page=1; var c=document.getElementById('qclear'); if(c)c.style.display=q?'block':'none'; renderList(); }
 function clearSearch(){ var i=document.getElementById('q'); if(i)i.value=''; q=''; var c=document.getElementById('qclear'); if(c)c.style.display='none'; page=1; renderList(); }
 function mapOpen(v){ window.open('https://map.naver.com/p/search/'+encodeURIComponent(v),'_blank'); }
@@ -1089,6 +1097,7 @@ function runVerify(){
 }
 
 load(); renderChips(); renderList(); renderArchive(); renderAcc(); renderArche(); renderWorks(); renderInsight(); renderNudges(); renderCourse(); setView(view);
+var _b=document.getElementById('bio'); if(_b)_b.value=bio;
 </script>
 </body>
 </html>
