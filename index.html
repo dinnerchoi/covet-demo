@@ -201,6 +201,10 @@
   .pg{min-width:33px; height:33px; border:1px solid var(--line); border-radius:9px; background:#fff; color:#55534c; font-family:"Archivo"; font-weight:800; font-size:13px; cursor:pointer}
   .pg.on{background:var(--acc); color:#fff; border-color:var(--acc)}
   .pg:disabled{opacity:.35; cursor:default}
+  .venlink{color:var(--acc); cursor:pointer; text-decoration:underline; text-underline-offset:2px}
+  .srch{position:relative; margin:2px 0 14px}
+  .srch input{width:100%; border:1px solid var(--line); border-radius:12px; padding:11px 36px 11px 14px; font-size:13.5px; font-family:"Pretendard"; background:#fafafa}
+  .srch .x{display:none; position:absolute; right:11px; top:50%; transform:translateY(-50%); color:var(--gray); cursor:pointer; font-size:17px}
   /* 앨범(바둑판) 카드 */
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   .exg{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff}
@@ -278,6 +282,7 @@
     </div>
     <div class="chips" id="chips"></div>
     <div class="body">
+      <div class="srch"><input id="q" oninput="onSearch()" placeholder="🔍 작가·작품·갤러리 검색"><span class="x" id="qclear" onclick="clearSearch()">×</span></div>
       <div class="insight" id="insightCard"></div>
       <div class="nudges" id="nudges"></div>
       <div class="shead" id="picksHead"><h2 class="kr">이번 주 추천 <span style="color:var(--acc)">✦</span></h2><div class="more" onclick="go('foryou')">내 취향으로 →</div></div>
@@ -368,18 +373,13 @@
 
       <button class="cta" style="margin-top:18px" onclick="openShare()">내 안목 카드 공유하기</button>
       <p style="font-size:11.5px;color:var(--gray);text-align:center;margin-top:8px">내 컬렉터 유형과 발자취를 친구와 공유해보세요.</p>
-
-      <div class="jhead" style="margin-top:26px">👯 친구의 안목</div>
-      <div id="friends"></div>
-      <button class="cta sm ghost" style="margin-top:12px" onclick="inviteFriend()">＋ 친구 초대하고 취향 비교하기</button>
-      <p style="font-size:10.5px;color:var(--faint);text-align:center;margin-top:7px">연인·가족·친구를 초대하면 서로의 컬렉터 유형과 ♡한 전시를 볼 수 있어요. <span style="color:var(--faint)">(데모 데이터)</span></p>
     </div>
   </div>
 
   <!-- ============ 4. 멤버십 / 검증 ============ -->
   <div class="screen" id="sc-member">
-    <div class="top"><div class="brand"><div class="logo">멤버십 · 검증</div><div class="me">나</div></div>
-      <div class="greet">제대로 시작하려는 컬렉터를 위한 — <b>안심하고 첫 걸음 떼는 법</b></div></div>
+    <div class="top"><div class="brand"><div class="logo">사기 전 검증 · 자문</div><div class="me">나</div></div>
+      <div class="greet">사기 전, 파는 쪽이 아닌 <b>당신 편</b>이 봐드려요 — 가격·진위·리스크 검증</div></div>
     <div class="body">
 
       <div class="shead"><h2 class="kr">멤버십이 해주는 일</h2></div>
@@ -464,7 +464,7 @@
     <div class="tab on" data-t="discover" onclick="go('discover')"><div class="ti">🧭</div><div class="tl">발견</div></div>
     <div class="tab" data-t="foryou" onclick="go('foryou')"><div class="ti">✦</div><div class="tl">취향</div></div>
     <div class="tab" data-t="archive" onclick="go('archive')"><div class="ti">🗺️</div><div class="tl">발자취</div></div>
-    <div class="tab" data-t="member" onclick="go('member')"><div class="ti">🛡</div><div class="tl">멤버십</div></div>
+    <div class="tab" data-t="member" onclick="go('member')"><div class="ti">🛡</div><div class="tl">검증</div></div>
   </div>
 
   <!-- share overlay -->
@@ -928,7 +928,7 @@ function card(e){
       '<div class="pin"><div class="art">'+e.art+'</div></div>'+
       '<div class="sub">'+e.sub+'</div>'+
     '</div>'+
-    '<div class="info"><div class="meta"><span class="dot">◉ '+e.dist+'</span><span>'+e.ven+'</span><span>'+e.date+'</span><span class="'+(e.price==='무료'?'free':'paid')+'">'+e.price+'</span></div></div>'+
+    '<div class="info"><div class="meta"><span class="dot">◉ '+e.dist+'</span><span class="venlink" onclick="mapOpen(\''+e.ven+'\')">'+e.ven+' 🗺</span><span>'+e.date+'</span><span class="'+(e.price==='무료'?'free':'paid')+'">'+e.price+'</span></div></div>'+
     '<div class="acts">'+
       '<div class="act'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')"><span class="i">'+(s.h?'♥':'♡')+'</span>관심</div>'+
       (more?
@@ -963,20 +963,26 @@ function cardGrid(e){
 function cardTable(e){
   var s=S(e.id);
   return '<div class="tr'+(s.x?' dim':'')+'">'
-    +'<div class="c-art"><b>'+e.art+'</b><span>'+e.ven+' · '+e.dist+'</span></div>'
+    +'<div class="c-art"><b>'+e.art+'</b><span><span class="venlink" onclick="mapOpen(\''+e.ven+'\')">'+e.ven+' 🗺</span> · '+e.dist+'</span></div>'
     +'<div class="c-date">'+e.date+'</div>'
     +'<div class="c-price" style="color:'+(e.price==='무료'?'var(--win)':'var(--warn)')+'">'+e.price+'</div>'
     +'<div class="c-h'+(s.h?' on':'')+'" onclick="tog(\''+e.id+'\',\'h\')">'+(s.h?'♥':'♡')+'</div>'
   +'</div>';
 }
-var page=1, PER=6;
+var page=1, PER=6, q='';
+function onSearch(){ q=document.getElementById('q').value.trim(); page=1; var c=document.getElementById('qclear'); if(c)c.style.display=q?'block':'none'; renderList(); }
+function clearSearch(){ var i=document.getElementById('q'); if(i)i.value=''; q=''; var c=document.getElementById('qclear'); if(c)c.style.display='none'; page=1; renderList(); }
+function mapOpen(v){ window.open('https://map.naver.com/p/search/'+encodeURIComponent(v),'_blank'); }
 function renderList(){
   var picks=document.getElementById('picks');
   picks.innerHTML=EX.filter(function(e){return e.pick;}).map(card).join('');
   var l=document.getElementById('list');
-  var arr=EX.filter(function(e){return filter==='전체'||e.dist===filter;});
-  document.getElementById('alltitle').textContent= filter==='전체'?'지금 열린 전시':(filter+' 전시 '+arr.length+'개');
-  var sel=(filter!=='전체'), ph=document.getElementById('picksHead');   // 지역 선택 시 '이번 주 추천' 숨겨 필터가 보이게
+  var arr;
+  if(q){ var ql=q.toLowerCase(); arr=EX.filter(function(e){ return (e.art+' '+e.sub+' '+e.ven+' '+e.dist+' '+e.badge).toLowerCase().indexOf(ql)>=0; });
+    document.getElementById('alltitle').textContent='“'+q+'” 검색 '+arr.length+'개'; }
+  else { arr=EX.filter(function(e){return filter==='전체'||e.dist===filter;});
+    document.getElementById('alltitle').textContent= filter==='전체'?'지금 열린 전시':(filter+' 전시 '+arr.length+'개'); }
+  var sel=(q||filter!=='전체'), ph=document.getElementById('picksHead');   // 검색·지역 선택 시 '이번 주 추천' 숨김
   if(ph) ph.style.display=sel?'none':''; picks.style.display=sel?'none':'';
   if(!arr.length){ l.className=''; l.innerHTML='<div class="empty"><div class="ic">🧭</div>'+filter+' 지역은 등록된 전시를 준비 중이에요.<br>곧 추가됩니다.</div>'; renderPager(0); return; }
   var pages=Math.ceil(arr.length/PER); if(page>pages)page=pages; if(page<1)page=1;
