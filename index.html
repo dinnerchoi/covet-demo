@@ -280,7 +280,7 @@
     <div class="body">
       <div class="insight" id="insightCard"></div>
       <div class="nudges" id="nudges"></div>
-      <div class="shead"><h2 class="kr">이번 주 추천 <span style="color:var(--acc)">✦</span></h2><div class="more" onclick="go('foryou')">내 취향으로 →</div></div>
+      <div class="shead" id="picksHead"><h2 class="kr">이번 주 추천 <span style="color:var(--acc)">✦</span></h2><div class="more" onclick="go('foryou')">내 취향으로 →</div></div>
       <div id="picks"></div>
       <div class="shead"><h2 class="kr" id="alltitle">지금 열린 전시</h2>
         <div class="viewtoggle">
@@ -911,7 +911,10 @@ function renderChips(){
   var c=document.getElementById('chips'); c.innerHTML='';
   DISTRICTS.forEach(function(d){
     var el=document.createElement('div'); el.className='chip'+(d===filter?' on':''); el.textContent=d;
-    el.onclick=function(){filter=d; page=1; renderChips(); renderList();}; c.appendChild(el);
+    el.onclick=function(){filter=d; page=1; renderChips(); renderList();
+      if(d==='전체'){ window.scrollTo({top:0,behavior:'smooth'}); }
+      else { var y=document.getElementById('list').getBoundingClientRect().top+window.scrollY-66; window.scrollTo({top:(y<0?0:y),behavior:'smooth'}); }
+    }; c.appendChild(el);
   });
 }
 var openActs={};
@@ -972,7 +975,9 @@ function renderList(){
   picks.innerHTML=EX.filter(function(e){return e.pick;}).map(card).join('');
   var l=document.getElementById('list');
   var arr=EX.filter(function(e){return filter==='전체'||e.dist===filter;});
-  document.getElementById('alltitle').textContent= filter==='전체'?'지금 열린 전시':(filter+' 전시');
+  document.getElementById('alltitle').textContent= filter==='전체'?'지금 열린 전시':(filter+' 전시 '+arr.length+'개');
+  var sel=(filter!=='전체'), ph=document.getElementById('picksHead');   // 지역 선택 시 '이번 주 추천' 숨겨 필터가 보이게
+  if(ph) ph.style.display=sel?'none':''; picks.style.display=sel?'none':'';
   if(!arr.length){ l.className=''; l.innerHTML='<div class="empty"><div class="ic">🧭</div>'+filter+' 지역은 등록된 전시를 준비 중이에요.<br>곧 추가됩니다.</div>'; renderPager(0); return; }
   var pages=Math.ceil(arr.length/PER); if(page>pages)page=pages; if(page<1)page=1;
   var slice=arr.slice((page-1)*PER, page*PER);
